@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avatars | PhotoStage</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/ui/shared.css">
+<link rel="stylesheet" href="/ui/console.css">
+</head>
+<body>
+<header class="top" id="top">
+  <div class="top-inner">
+    <h1>PhotoStage</h1>
+    <span class="pill" id="renderer" role="status" data-state="checking">Checking the renderer…</span>
+    <span class="spacer"></span>
+    <input type="search" id="search" placeholder="Search avatars" aria-label="Search avatars" autocomplete="off" hidden>
+    <button class="btn primary" id="new" type="button" disabled>New avatar</button>
+  </div>
+</header>
+<main class="page" id="page">
+  <div class="notice" id="notice" role="alert" hidden>
+    <span id="notice-text"></span>
+    <button class="btn small" id="notice-action" type="button">Try again</button>
+  </div>
+  <p class="busy" id="busy"><span class="spinner" aria-hidden="true"></span> Loading avatars…</p>
+  <ul class="grid" id="grid" aria-label="Avatars"></ul>
+  <section class="empty" id="empty" hidden>
+    <h2>No avatars yet</h2>
+    <p>Upload a photo of a person and PhotoStage turns it into an avatar that talks, with a link that opens in any browser.</p>
+    <button class="btn primary" id="empty-new" type="button" disabled>New avatar</button>
+  </section>
+  <p class="none" id="none" hidden>No avatar matches your search.</p>
+</main>
+<div id="layer"></div>
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+<script src="/ui/console.js"></script>
+</body>
+</html>

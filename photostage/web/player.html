@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PhotoStage</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/ui/shared.css">
+<link rel="stylesheet" href="/ui/player.css">
+</head>
+<body>
+<main class="player" id="player">
+  <section class="screen" id="screen">
+    <canvas id="stage-canvas" hidden aria-label="Animated photo avatar"></canvas>
+    <div class="loading" id="loading" role="status">
+      <div class="spinner" id="loading-spinner" aria-hidden="true"></div>
+      <p id="loading-text">Loading the avatar…</p>
+      <div class="bar" id="loading-bar" hidden><span id="loading-fill"></span></div>
+      <a href="/" id="loading-home" hidden>All avatars</a>
+    </div>
+    <a class="corner home" id="home" href="/" hidden>&larr; All avatars</a>
+    <button class="corner fullscreen" id="fullscreen" type="button" aria-label="Fullscreen" title="Fullscreen" hidden>
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+    </button>
+  </section>
+  <section class="dock" id="dock" hidden>
+    <div class="dock-inner">
+      <div class="exchange" id="exchange" hidden aria-live="polite">
+        <p class="you" id="you"></p>
+        <p class="said" id="reply"></p>
+      </div>
+      <p class="status" id="status" role="status"></p>
+      <form class="compose" id="compose">
+        <select id="mode" aria-label="Mode">
+          <option value="chat">Conversation</option>
+          <option value="speak">Speak exactly this text</option>
+        </select>
+        <textarea id="message" rows="1" maxlength="500" placeholder="Type a message" aria-label="Message" required></textarea>
+        <button class="btn" id="mic" type="button">Record</button>
+        <button class="btn primary" id="send" disabled>Send</button>
+        <button class="btn" id="stop" type="button" disabled>Stop</button>
+      </form>
+    </div>
+  </section>
+</main>
+<script src="/ui/options.js"></script>
+<script src="/ui/loader.js"></script>
+<script src="/ui/playback.js"></script>
+<script src="/ui/compositor.js"></script>
+<script src="/ui/body.js"></script>
+<script src="/ui/clips.js"></script>
+<script src="/ui/conversation.js"></script>
+<script src="/ui/player.js"></script>
+</body>
+</html>

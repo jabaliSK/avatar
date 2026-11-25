@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Avatar Studio | Conversational AI</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js?v=source-photo-1" defer></script>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/"><span class="brand-icon" aria-hidden="true">A</span> AVATAR <b>STUDIO</b></a>
+    <span class="header-note">SELF-HOSTED CONVERSATIONAL AI</span>
+    <span class="local-badge"><span class="dot"></span> Local workspace</span>
+  </header>
+  <main>
+    <div class="page-title"><div><p class="eyebrow">FROM PORTRAIT TO PERSONALITY</p><h1>Bring your avatar to life.</h1><p class="subtitle">One image. A voice. A conversation that feels personal.</p></div><span class="version">PROTOTYPE / 01</span></div>
+    <div class="workspace">
+      <aside class="panel setup">
+        <div class="panel-heading"><span class="step">01</span><h2>Your avatar</h2></div>
+        <form id="avatar-form">
+          <label class="upload" id="drop-zone" for="image">
+            <img id="preview" alt="Selected portrait preview" hidden>
+            <span id="upload-copy"><span class="upload-symbol" aria-hidden="true">+</span><strong>Start with a portrait</strong><small>Choose a clear, front-facing photo</small><span class="file-tag">PNG, JPG, WEBP / UP TO 15 MB</span></span>
+            <input id="image" name="image" type="file" accept="image/png,image/jpeg,image/webp" required>
+          </label>
+          <label class="field-label" for="name">AVATAR NAME</label>
+          <input id="name" name="name" maxlength="80" placeholder="e.g. Alex, your AI assistant" required>
+          <label class="consent"><input type="checkbox" id="consent" required><span>I own this image or have permission to animate the person pictured.</span></label>
+          <button class="primary" id="create-button" type="submit">Create avatar <span aria-hidden="true">→</span></button>
+        </form>
+        <div class="saved-header"><h3>YOUR LIBRARY</h3><span id="avatar-count">0 avatars</span></div>
+        <div id="library"><p class="empty-small">Your saved avatars will appear here.</p></div>
+        <div class="privacy-note"><span class="dot"></span><p>Local models keep portraits and conversations on this server. Configured external endpoints receive the relevant input.</p></div>
+      </aside>
+      <section class="panel stage-panel" aria-label="Avatar conversation">
+        <div class="stage-toolbar"><div><span class="step">02</span><h2 id="stage-title">Conversation stage</h2></div><span id="stage-state" class="state-chip">AWAITING PORTRAIT</span></div>
+        <div class="stage" id="stage">
+          <div class="stage-grid"></div>
+          <div id="stage-placeholder"><div class="avatar-orbit"><div class="avatar-outline"><span></span><i></i></div></div><h3>Your next conversation starts here.</h3><p>Create an avatar to enter the conversation.</p></div>
+          <img id="portrait" alt="Your selected AI avatar" hidden>
+          <video id="idle-video" muted loop playsinline preload="auto" hidden aria-label="Avatar listening animation"></video>
+          <canvas id="live-canvas" width="512" height="512" hidden aria-label="Live speaking avatar"></canvas>
+          <a id="exit-holobox" class="quiet" href="/">Exit Holobox view</a>
+          <video id="avatar-video" controls playsinline preload="auto" hidden aria-label="Lip-synced avatar reply"></video>
+          <div id="stage-loading" hidden><span class="spinner"></span><strong>Creating your reply</strong><span>Transcribing · Thinking · Speaking · Animating</span><small>A complete video is generated before playback.</small></div>
+          <span class="ai-disclosure">AI-GENERATED AVATAR</span>
+          <span class="stage-caption" id="renderer-caption">PHOTO AVATAR</span>
+        </div>
+        <div class="conversation-controls"><div class="voice-label"><span class="wave" aria-hidden="true">▂ ▆ █ ▃ ▇ ▂</span><span id="voice-status">Ready when you are</span></div><div><button id="stop-reply" class="quiet" hidden>Stop reply</button><button id="holobox-view" class="quiet" disabled>Holobox view</button><a id="source-photo" class="quiet" href="/" target="_blank" rel="noopener" hidden>Source photo</a><button id="new-chat" class="quiet" disabled>New conversation</button><button id="share" class="quiet" disabled>Copy avatar URL</button></div></div>
+        <div class="transcript" id="transcript" role="log" aria-live="polite"><div class="transcript-welcome"><span class="mini-mark">A</span><p>Your conversation will appear here.<br><small>Use your microphone or type a message below.</small></p></div></div>
+        <form class="composer" id="message-form"><label class="sr-only" for="message">Your message</label><input id="message" maxlength="2000" placeholder="Ask your avatar something..." disabled><button id="record" type="button" class="mic" aria-label="Record a voice message" disabled>Mic</button><button id="send" type="submit" class="send" disabled>Send <span aria-hidden="true">↗</span></button></form>
+        <p class="mode-note" id="mode-note">TURN-BASED PREVIEW <span>·</span> Record, send, then play the synchronized video reply. Not a live video call.</p>
+      </section>
+      <aside class="panel pipeline">
+        <div class="panel-heading"><span class="step">03</span><h2>AI pipeline</h2></div>
+        <p class="pipeline-intro">Independent models.<br>One connected experience.</p>
+        <div class="pipeline-node" data-provider="stt"><span class="node-icon">01</span><div><h3>Speech to text</h3><p>Whisper / compatible API</p><small>Checking setup...</small></div><i></i></div>
+        <div class="connector"></div>
+        <div class="pipeline-node" data-provider="llm"><span class="node-icon">02</span><div><h3>Language model</h3><p>Qwen / compatible API</p><small>Checking setup...</small></div><i></i></div>
+        <div class="connector"></div>
+        <div class="pipeline-node" data-provider="tts"><span class="node-icon">03</span><div><h3>Text to speech</h3><p>Piper / compatible API</p><small>Checking setup...</small></div><i></i></div>
+        <div class="connector"></div>
+        <div class="pipeline-node" data-provider="renderer"><span class="node-icon">04</span><div><h3>Avatar animation</h3><p id="renderer-label">Checking renderer...</p><small>Checking setup...</small></div><i></i></div>
+        <p id="renderer-description" class="empty-small" style="grid-column: 1 / -1"></p>
+        <div class="pipeline-info"><span class="eyebrow">BUILT FOR YOUR STACK</span><h3>Make it your own.</h3><p>Connect OpenAI-compatible speech and LLM endpoints using the server environment configuration. API keys never enter the browser.</p></div>
+        <div class="quality-note"><h3>A better portrait. A better avatar.</h3><p>Use a sharp photo with one face, neutral expression, good lighting, and an unobstructed mouth.</p></div>
+        <button id="refresh-status" class="quiet">Refresh model status</button>
+      </aside>
+    </div>
+    <div id="notification" role="alert" hidden></div>
+    <footer><span>AVATAR STUDIO <span class="footer-divider">/</span> LOCAL DEVELOPMENT EDITION</span><span>Your image. Your infrastructure. Your AI.</span></footer>
+  </main>
+</body>
+</html>
