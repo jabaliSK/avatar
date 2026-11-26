@@ -1,0 +1,132 @@
+{
+  "engine_dir": "/engines/sm90_trt10.11.0.33",
+  "gpu": "NVIDIA H100L-94C",
+  "render_vs_pytorch_fp16": {
+    "frames": 24,
+    "mean_abs_err_0_255": 0.149,
+    "p99_abs_err_mean": 1.017,
+    "max_abs_err": 13.12,
+    "psnr_db_mean": 59.94
+  },
+  "lmdm_vs_pytorch_fp32": {
+    "trt_fp32": [
+      {
+        "rel_rmse": 0.07413,
+        "max_abs": 0.1953
+      },
+      {
+        "rel_rmse": 0.07449,
+        "max_abs": 0.2464
+      },
+      {
+        "rel_rmse": 0.07576,
+        "max_abs": 0.2374
+      },
+      {
+        "rel_rmse": 0.08331,
+        "max_abs": 0.2618
+      }
+    ],
+    "trt_fp16": [
+      {
+        "rel_rmse": 0.07427,
+        "max_abs": 0.1953
+      },
+      {
+        "rel_rmse": 0.0745,
+        "max_abs": 0.2464
+      },
+      {
+        "rel_rmse": 0.07578,
+        "max_abs": 0.2374
+      },
+      {
+        "rel_rmse": 0.08342,
+        "max_abs": 0.2618
+      }
+    ]
+  },
+  "loop_register_s": 0.25,
+  "roi_shape_hw": [
+    1196,
+    1222
+  ],
+  "loop_cache_roundtrip_ok": true,
+  "timings": {
+    "warp_trt": {
+      "mean_ms": 17.428,
+      "p50_ms": 20.58,
+      "p95_ms": 20.741
+    },
+    "decoder_trt": {
+      "mean_ms": 18.525,
+      "p50_ms": 20.847,
+      "p95_ms": 21.033
+    },
+    "warp+decoder_trt": {
+      "mean_ms": 36.232,
+      "p50_ms": 33.071,
+      "p95_ms": 41.793
+    },
+    "warp_pytorch_fp16": {
+      "mean_ms": 42.781,
+      "p50_ms": 42.781,
+      "p95_ms": 42.876
+    },
+    "decoder_pytorch_fp16": {
+      "mean_ms": 53.585,
+      "p50_ms": 53.587,
+      "p95_ms": 53.744
+    },
+    "stitch_cpu": {
+      "mean_ms": 2.666,
+      "p50_ms": 0.545,
+      "p95_ms": 9.157
+    },
+    "lmdm_call_10steps_trt_fp32": {
+      "mean_ms": 89.826,
+      "p50_ms": 86.537,
+      "p95_ms": 95.083
+    },
+    "lmdm_one_step_trt_fp32": {
+      "mean_ms": 9.23,
+      "p50_ms": 10.363,
+      "p95_ms": 10.454
+    },
+    "lmdm_call_10steps_trt_fp16": {
+      "mean_ms": 68.407,
+      "p50_ms": 65.043,
+      "p95_ms": 73.635
+    },
+    "lmdm_one_step_trt_fp16": {
+      "mean_ms": 7.12,
+      "p50_ms": 9.973,
+      "p95_ms": 10.048
+    },
+    "lmdm_call_10steps_pytorch_fp32": {
+      "mean_ms": 391.392,
+      "p50_ms": 394.482,
+      "p95_ms": 395.017
+    },
+    "blend_roi_gpu": {
+      "mean_ms": 1.089,
+      "p50_ms": 0.224,
+      "p95_ms": 8.836
+    },
+    "roi_d2h": {
+      "mean_ms": 0.121,
+      "p50_ms": 0.119,
+      "p95_ms": 0.134
+    },
+    "paste_cpu": {
+      "mean_ms": 0.915,
+      "p50_ms": 0.907,
+      "p95_ms": 0.944
+    },
+    "chain_render+blend+d2h+paste": {
+      "mean_ms": 42.919,
+      "p50_ms": 42.921,
+      "p95_ms": 43.996
+    }
+  }
+}

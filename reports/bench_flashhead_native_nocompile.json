@@ -1,0 +1,93 @@
+{
+  "summary": {
+    "tag": "native_nocompile",
+    "compile": 0,
+    "device": "NVIDIA H100L-94C",
+    "load_s": 11.418537046993151,
+    "prepare_s": 4.450562982994597,
+    "frames_per_chunk": 28,
+    "chunk_audio_ms": 1120.0,
+    "median_chunk_ms": 10815.634668491839,
+    "p95_chunk_ms": 10816.603379993467,
+    "fps": 2.588844839736473,
+    "rtf": 9.656816668296285,
+    "realtime": false,
+    "median_audio_embed_ms": 36.78844899695832,
+    "median_generate_ms": 10770.459006991587,
+    "stage_median_ms": {
+      "color correction": 22.688865661621094,
+      "decode video frames": 6591.655611991882,
+      "encode motion frames": 665.4530763626099,
+      "model denoise per step": 3481.455445289612
+    },
+    "peak_mem_gib": 10.761520862579346,
+    "window_s": 8
+  },
+  "chunks": [
+    {
+      "chunk": 0,
+      "warmup": true,
+      "frames": 28,
+      "audio_embed_ms": 235.66124099306762,
+      "generate_ms": 10993.993241994758,
+      "d2h_ms": 12.76362600037828,
+      "total_ms": 11242.418108988204,
+      "st_model denoise per step": 3640.1326656341553,
+      "st_decode video frames": 6633.49723815918,
+      "st_color correction": 42.539119720458984,
+      "st_encode motion frames": 667.1276092529297
+    },
+    {
+      "chunk": 1,
+      "warmup": false,
+      "frames": 28,
+      "audio_embed_ms": 40.796109999064356,
+      "generate_ms": 10772.13163099077,
+      "d2h_ms": 21.735665999585763,
+      "total_ms": 10834.66340698942,
+      "st_model denoise per step": 3481.6181659698486,
+      "st_decode video frames": 6592.019081115723,
+      "st_color correction": 31.18443489074707,
+      "st_encode motion frames": 666.0072803497314
+    },
+    {
+      "chunk": 2,
+      "warmup": false,
+      "frames": 28,
+      "audio_embed_ms": 31.27370000584051,
+      "generate_ms": 10768.786382992403,
+      "d2h_ms": 7.289735003723763,
+      "total_ms": 10807.349818001967,
+      "st_model denoise per step": 3481.2726974487305,
+      "st_decode video frames": 6590.014457702637,
+      "st_color correction": 22.700071334838867,
+      "st_encode motion frames": 664.715051651001
+    },
+    {
+      "chunk": 3,
+      "warmup": false,
+      "frames": 28,
+      "audio_embed_ms": 36.707909996039234,
+      "generate_ms": 10761.865452994243,
+      "d2h_ms": 16.092593999928795,
+      "total_ms": 10814.665956990211,
+      "st_model denoise per step": 3481.485366821289,
+      "st_decode video frames": 6591.292142868042,
+      "st_color correction": 22.67765998840332,
+      "st_encode motion frames": 665.2543544769287
+    },
+    {
+      "chunk": 4,
+      "warmup": false,
+      "frames": 28,
+      "audio_embed_ms": 36.86898799787741,
+      "generate_ms": 10772.356651999871,
+      "d2h_ms": 7.377739995718002,
+      "total_ms": 10816.603379993467,
+      "st_model denoise per step": 3481.4255237579346,
+      "st_decode video frames": 6592.8966999053955,
+      "st_color correction": 22.65310287475586,
+      "st_encode motion frames": 665.651798248291
+    }
+  ]
+}

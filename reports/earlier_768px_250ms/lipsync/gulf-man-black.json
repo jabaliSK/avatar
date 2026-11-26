@@ -1,0 +1,44 @@
+{
+  "video": "gulf-man-black.mp4",
+  "frames": 399,
+  "fps": 25.0,
+  "face_crop": [
+    0.263,
+    0.077,
+    0.741,
+    0.419
+  ],
+  "speech_window_s": [
+    2.44,
+    13.24
+  ],
+  "face_found_pct": 100.0,
+  "lip_gap": {
+    "lag_ms": 25,
+    "lag_ms_90pct": [
+      0,
+      51
+    ],
+    "corr_at_peak": 0.354,
+    "corr_best_elsewhere": 0.091,
+    "corr_at_zero": 0.339,
+    "mouth_p5_p95": [
+      0.035,
+      0.184
+    ]
+  },
+  "jaw_open": {
+    "lag_ms": 27,
+    "lag_ms_90pct": [
+      -11,
+      52
+    ],
+    "corr_at_peak": 0.263,
+    "corr_best_elsewhere": 0.051,
+    "corr_at_zero": 0.25,
+    "mouth_p5_p95": [
+      0.017,
+      0.621
+    ]
+  }
+}

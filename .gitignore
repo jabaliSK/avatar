@@ -1,0 +1,20 @@
+# local configuration; holds the TURN password. Copy .env.example instead
+.env
+
+# fetched, built or produced on the host (README "Layout"); anchored so nothing under services/ is matched
+/models/
+/third_party/
+/engines/
+/images/
+/avatars/
+/loops/
+/avatars_768/
+/loops_768/
+/run/
+/logs/
+/work/
+/.cache/
+
+__pycache__/
+*.pyc
+.pytest_cache/

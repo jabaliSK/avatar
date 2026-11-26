@@ -1,0 +1,31 @@
+turn 1  q_long.wav (say)
+  heard : "I'm planning to move our virtual machines from an old data centre to a new platform next year, and I would like to understand what options we have for storage and networking, and how long a migration like that usually takes."
+  reply : 'Moving VMs usually takes a few weeks to a couple of months, depending on size and complexity. For st'
+  after speech end    step    stage
+    +0.000 s      +0.000  you stop speaking
+    +1.279 s      +1.279  ASR text ready  (decode 386 ms, includes the VAD end-of-speech wait)
+    +1.386 s      +0.107  first LLM token reaches TTS
+    +2.306 s      +0.920  first clause synthesised  (TTS 677 ms for the clause)
+    +2.325 s      +0.019  renderer receives the first audio
+    +3.280 s      +0.955  renderer: first frame ready  (949 ms after its first audio)
+    +3.299 s      +0.019  gateway receives the first video frame
+    +3.442 s      +0.143  reply sound reaches the client  (WebRTC transport + jitter buffer)
+  -> first reply sound 3.44 s after speech end; the longest single step is 'ASR text ready' (1.28 s)
+  renderer: the reply was interrupted after 100 frames
+
+turn 2  q_interrupt.wav (barge_on_audio)
+  heard : 'Wait, stop, let me ask you something else.'
+  reply : 'Sure, what would you like to ask?'
+  after speech end    step    stage
+    +0.000 s      +0.000  you stop speaking
+    +1.166 s      +1.166  ASR text ready  (decode 250 ms, includes the VAD end-of-speech wait)
+    +1.247 s      +0.081  first LLM token reaches TTS
+    +1.887 s      +0.640  first clause synthesised  (TTS 427 ms for the clause)
+    +1.917 s      +0.030  renderer receives the first audio
+    +2.386 s      +0.469  renderer: first frame ready  (463 ms after its first audio)
+    +2.397 s      +0.011  gateway receives the first video frame
+    +2.568 s      +0.171  reply sound reaches the client  (WebRTC transport + jitter buffer)
+  -> first reply sound 2.57 s after speech end; the longest single step is 'ASR text ready' (1.17 s)
+  renderer: 60 frames, 8 repeated (13%), 43.4 ms to render a frame (a 25 fps clock allows 40)
+  barge-in: the gateway cut the reply 0.64 s after you started talking (it waits for 288 ms of speech); the renderer stopped 28 ms later; the old reply's sound ended at the client 0.79 s after you started talking
+

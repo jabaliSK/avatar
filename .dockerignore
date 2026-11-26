@@ -1,0 +1,23 @@
+# Weights, caches, logs and avatar bundles are bind-mounted at runtime and must never enter an image or the build context.
+models
+avatars
+loops
+logs
+reports
+run
+.cache
+.env
+engines
+work
+images
+
+# third_party is opt-in per image.
+third_party/*
+!third_party/grid-sample3d-trt-plugin
+!third_party/OpenAvatarChat
+!third_party/echomimic_v3
+
+# Keep last so it also applies inside the re-included repositories.
+**/.git
+**/__pycache__
+**/*.pyc

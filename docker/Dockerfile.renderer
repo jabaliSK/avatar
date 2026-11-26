@@ -1,0 +1,72 @@
+# Live head renderer + compositor: Ditto (patched to MediaPipe-only, see services/renderer/PATCHES.md) on TensorRT.
+# Build from the project root:  docker build -f docker/Dockerfile.renderer -t kka-renderer:latest .
+#
+# TensorRT is pinned to 10.11: the grid_sample_3d plugin must be compiled against the same minor, with explicit SASS for every GPU
+# it has to run on (PLUGIN_ARCHS: 89 = L40S, 90 = H100/H200). No PTX is embedded on purpose: the prebuilt plugin shipped with
+# Ditto fails with "unsupported toolchain" on this host's 550 driver, which cannot JIT PTX from the CUDA 12.8 toolkit.
+FROM kka-base:cu128 AS deps
+
+ARG TRT_VER=10.11.0.33
+
+# numpy and protobuf are frozen for every pip call below (see the constraints file).
+COPY docker/constraints.renderer.txt /opt/constraints.txt
+ENV PIP_CONSTRAINT=/opt/constraints.txt
+
+# Headers only: needed to compile the plugin. The runtime libraries come from the pip wheels below.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libnvinfer-headers-dev=${TRT_VER}-1+cuda12.9 \
+        libnvinfer-headers-plugin-dev=${TRT_VER}-1+cuda12.9 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Separate layer: the libs wheel is ~3 GB.
+RUN pip install --extra-index-url https://pypi.nvidia.com \
+        tensorrt_cu12==${TRT_VER} tensorrt_cu12_libs==${TRT_VER} tensorrt_cu12_bindings==${TRT_VER}
+
+# cuda-python must stay on 12.x: Ditto imports `from cuda import cuda, cudart, nvrtc`, which 13.x removed.
+# onnx is pinned: newer releases require protobuf>=4.25 and numpy 2.
+RUN pip install cuda-python==12.8.0 polygraphy colored onnx==1.17.0 onnxruntime-gpu==1.22.0
+
+# --no-deps keeps mediapipe from pulling opencv-contrib-python next to opencv-python-headless.
+RUN pip install --no-deps mediapipe==0.10.9 && pip install absl-py attrs flatbuffers
+
+# matplotlib: mediapipe/__init__ imports it (drawing utilities) even though we only use the Tasks API.
+RUN pip install matplotlib==3.9.4 scikit-image==0.25.0 scikit-learn==1.6.0 numba==0.60.0 cython==3.0.11 \
+        imageio==2.36.1 filetype fastapi "uvicorn[standard]" websockets
+
+ARG PLUGIN_ARCHS="89 90"
+COPY third_party/grid-sample3d-trt-plugin /opt/src/grid-sample3d-trt-plugin
+RUN set -eux; \
+    TRT_LIB="$(python -c 'import os, tensorrt_libs; print(os.path.dirname(tensorrt_libs.__file__))')"; \
+    mkdir -p /opt/trt-plugins; cd /opt/src/grid-sample3d-trt-plugin; \
+    GENCODE=""; for a in $PLUGIN_ARCHS; do GENCODE="$GENCODE -gencode arch=compute_$a,code=sm_$a"; done; \
+    nvcc -shared -Xcompiler -fPIC -std=c++17 -O2 $GENCODE -Isrc \
+        src/*.cpp src/*.cu -L"$TRT_LIB" -l:libnvinfer.so.10 -o /opt/trt-plugins/libgrid_sample_3d_plugin.so; \
+    ls -la /opt/trt-plugins
+
+# espeak-ng (GPL-3) is not used here. Bases built before it was dropped from Dockerfile.base still carry it, so it is purged
+# when present and its absence is asserted.
+RUN if dpkg -s espeak-ng >/dev/null 2>&1; then apt-get purge -y --auto-remove espeak-ng espeak-ng-data libespeak-ng1; fi; \
+    ! dpkg -s espeak-ng >/dev/null 2>&1
+
+# Ditto reads video sources (the Stage A body loops) through imageio's ffmpeg plugin. The sdist is installed on purpose: the
+# wheels bundle a ~70 MB static GPL ffmpeg, whereas the sdist falls back to the ffmpeg already in the base image.
+RUN pip install --no-binary imageio-ffmpeg "imageio-ffmpeg==0.8.1"
+ENV IMAGEIO_FFMPEG_EXE=/usr/bin/ffmpeg
+
+ENV GRID_SAMPLE_3D_PLUGIN=/opt/trt-plugins/libgrid_sample_3d_plugin.so \
+    PYTHONPATH=/app:/app/ditto \
+    PYTHONDONTWRITEBYTECODE=1
+
+WORKDIR /app
+
+
+FROM deps AS app
+COPY services/renderer /app
+RUN cd /app/ditto && python setup_blend.py build_ext --inplace \
+    && python -c "from core.utils.blend import blend_images_cy; print('blend ext ok')"
+
+# Compression is off: uvicorn's default zlib-compresses every video frame in the event loop (~6 fps ceiling for raw RGB).
+EXPOSE 8290
+HEALTHCHECK --interval=15s --timeout=5s --start-period=120s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8290/healthz', timeout=4)"
+CMD ["uvicorn", "app.server:app", "--host", "0.0.0.0", "--port", "8290", "--ws-per-message-deflate", "false"]

@@ -1,0 +1,115 @@
+# Conversation gateway configuration (OpenAvatarChat v0.6.0 + the kka handlers).
+#
+# Handler chain:  browser mic -> RtcClient -> BargeInVad -> FasterWhisper -> LLM (vLLM) -> KokoroTTS -> RendererAvatar -> RtcClient
+# Every model below is Apache-2.0 / MIT. Handler option names are checked by pydantic, which ignores unknown keys silently, so a
+# typo here does not fail - verify against the "Registered handler ... with config" lines in the startup log.
+default:
+  logger:
+    log_level: "INFO"
+  service:
+    host: "0.0.0.0"
+    port: 8282
+    # HTTPS is used only when both files exist. The entrypoint creates a self-signed pair here when GATEWAY_TLS=1; mount a real
+    # certificate over this directory for anything beyond a demo. Browsers only allow the microphone on https or localhost.
+    cert_file: "/opt/kka/tls/cert.pem"
+    cert_key: "/opt/kka/tls/key.pem"
+  chat_engine:
+    model_root: "/models"
+    concurrent_limit: 1
+    handler_search_path:
+      - "src/handlers"
+      - "/opt/kka-handlers"
+    handler_configs:
+      RtcClient:
+        module: client/rtc_client/client_handler_rtc
+        connection_ttl: 3600
+        output_video_fps: 25          # must equal the renderer's frame rate
+
+      InterruptHandler:
+        module: logic/interrupt/interrupt_handler
+
+      BargeInVad:
+        module: kka/vad/barge_in_vad
+        speaking_threshold: 0.5
+        start_delay: 2048
+        end_delay: 11200              # samples at 16 kHz of silence that end an utterance (700 ms); a restart within 0.5 s after that is re-joined
+        buffer_look_back: 5000
+        speech_padding: 512
+        barge_in: true                # false = stock half-duplex (needed for loudspeakers without echo cancellation)
+        barge_in_window_ms: 512
+        barge_in_min_speech_ms: 256
+
+      FasterWhisper:
+        module: kka/asr/faster_whisper_asr
+        model_path: "/models/faster-whisper-large-v3-turbo"
+        device: "cuda"
+        device_index: 0
+        compute_type: "float16"
+        language: "en"
+        beam_size: 1
+        initial_prompt: "HPE, Hewlett Packard Enterprise, ProLiant, Aruba, GreenLake, Synergy, Nimble Storage, Alletra, Cray, OneView, iLO."
+
+      LLMOpenAICompatible:
+        module: llm/openai_compatible/llm_handler_openai_compatible
+        enabled: true
+        api_url: "http://kka-vllm:8000/v1"
+        api_key: "EMPTY"              # vLLM runs without a key, but the handler insists on a non-empty value
+        model_name: "qwen3-8b"
+        enable_video_input: false
+        history_length: 12
+        system_prompt: >-
+          You are a friendly, knowledgeable virtual assistant. You appear as a video avatar and are talking with a person in
+          real time, and everything you write is spoken aloud. Keep every reply short: at most two sentences and about twenty-five
+          words, even for broad questions. Give the answer first and then stop; the person can ask for more detail. Reply the
+          way people talk: plain conversational English with natural punctuation. Never use markdown, bullet points, numbered
+          lists, headings, emojis, code or web addresses. Write numbers and abbreviations the way they are spoken. If a request
+          is unclear, ask one short clarifying question. If you are not sure about something, say so briefly instead of guessing.
+
+      KokoroTTS:
+        module: kka/tts/kokoro_tts
+        model_dir: "/models/Kokoro-82M"
+        voice: "am_michael"
+        speed: 1.0
+        # Kokoro is many tiny kernels, so on a GPU that vLLM is decoding on it slows 7-18x (about 170 ms -> 1.2-3 s for one clause).
+        # On the CPU it is steady (RTF ~0.1 with 12-16 threads) and leaves the GPU to the LLM and the renderer.
+        device: "cpu"
+        cpu_threads: 12
+        # misaki's dictionaries are all the G2P has (its espeak fallback is GPL-3 and is not loaded), so a word outside them is skipped
+        # silently. [word](/phonemes/) gives exact phonemes (misaki's American set, checked against Kokoro's vocabulary by
+        # services/gateway/tests/test_pronunciations.py). Keys are whole words, matched regardless of case.
+        pronunciations:
+          HPE: "H P E"
+          GreenLake: "Green Lake"
+          iLO: "i L O"
+          datacenter: "data center"
+          Hewlett: "[Hewlett](/hjˈulɪt/)"
+          Packard: "[Packard](/pˈækɚd/)"
+          Alletra: "[Alletra](/əlˈɛtɹə/)"
+          ProLiant: "[ProLiant](/pɹOlˈIənt/)"
+          SimpliVity: "[SimpliVity](/sɪmplˈɪvəTi/)"
+          Primera: "[Primera](/pɹɪmˈɛɹə/)"
+          Superdome: "[Superdome](/sˈupəɹdˌOm/)"
+          NonStop: "[NonStop](/nˈɑnstˌɑp/)"
+          Ezmeral: "[Ezmeral](/ɛzmˈɛɹəl/)"
+          composable: "[composable](/kəmpˈOzəbᵊl/)"
+          kubernetes: "[kubernetes](/kubəɹnˈɛtiz/)"
+          Ooredoo: "[Ooredoo](/ˈuɹɛdˌu/)"
+          Kahramaa: "[Kahramaa](/kɑhɹɑmˈɑ/)"
+          Lusail: "[Lusail](/lusˈAl/)"
+          Msheireb: "[Msheireb](/məʃˈAɹɪb/)"
+          Katara: "[Katara](/kɑtˈɑɹɑ/)"
+          Khalifa: "[Khalifa](/hɑlˈifə/)"
+          Marhaba: "[Marhaba](/mɑɹhˈɑbɑ/)"
+          Assalamu: "[Assalamu](/ɑsɑlˈɑmu/)"
+          salamu: "[salamu](/sɑlˈɑmu/)"
+          Alaikum: "[Alaikum](/ɑlˈAkum/)"
+          Alaykum: "[Alaykum](/ɑlˈAkum/)"
+
+      RendererAvatar:
+        module: kka/avatar/renderer_avatar
+        renderer_url: "ws://kka-renderer:8290/ws"
+        avatar: "gulf-man-white"                 # used when the control file below does not name an avatar
+        avatar_control_file: "/run/kka/avatar"   # write an avatar folder name here (host: ./run/avatar); read on every new session
+        frame_format: "raw"
+        fps: 25
+        audio_sample_rate: 24000

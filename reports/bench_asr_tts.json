@@ -1,0 +1,232 @@
+{
+ "questions": [
+  {
+   "name": "q_greenlake",
+   "voice": "af_heart",
+   "audio_s": 3.35,
+   "asr_ms": {
+    "median": 257.3,
+    "p95": 328.6,
+    "min": 256.1,
+    "max": 328.6,
+    "n": 5
+   },
+   "said": "Hi there, can you tell me what HPE GreenLake is?",
+   "heard": "Hi there, can you tell me what HPE GreenLake is?",
+   "wer": 0.0
+  },
+  {
+   "name": "q_servers",
+   "voice": "bm_george",
+   "audio_s": 4.88,
+   "asr_ms": {
+    "median": 257.9,
+    "p95": 267.1,
+    "min": 256.7,
+    "max": 267.1,
+    "n": 5
+   },
+   "said": "What is the difference between a ProLiant server and a Synergy system?",
+   "heard": "What is the difference between a ProServer and a Synergy system?",
+   "wer": 0.167
+  },
+  {
+   "name": "q_help",
+   "voice": "af_nicole",
+   "audio_s": 6.2,
+   "asr_ms": {
+    "median": 277.9,
+    "p95": 283.6,
+    "min": 267.7,
+    "max": 283.6,
+    "n": 5
+   },
+   "said": "Hello, could you give me a quick summary of what you can help me with today?",
+   "heard": "Hello, could you give me a quick summary of what you can help me with today?",
+   "wer": 0.0
+  },
+  {
+   "name": "q_short",
+   "voice": "am_adam",
+   "audio_s": 1.52,
+   "asr_ms": {
+    "median": 204.1,
+    "p95": 211.5,
+    "min": 203.0,
+    "max": 211.5,
+    "n": 5
+   },
+   "said": "Are you there?",
+   "heard": "Are you there?",
+   "wer": 0.0
+  },
+  {
+   "name": "q_long",
+   "voice": "bf_emma",
+   "audio_s": 12.9,
+   "asr_ms": {
+    "median": 397.1,
+    "p95": 439.6,
+    "min": 395.0,
+    "max": 439.6,
+    "n": 5
+   },
+   "said": "I'm planning to move our virtual machines from an old data center to a new platform next year, and I would like to understand what options we have for storage and networking, and how long a migration like that usually takes.",
+   "heard": "I'm planning to move our virtual machines from an old data centre to a new platform next year, and I would like to understand what options we have for storage and networking, and how long a migration like that usually takes.",
+   "wer": 0.024
+  },
+  {
+   "name": "q_interrupt",
+   "voice": "af_heart",
+   "audio_s": 2.85,
+   "asr_ms": {
+    "median": 244.2,
+    "p95": 246.8,
+    "min": 236.5,
+    "max": 246.8,
+    "n": 5
+   },
+   "said": "Wait, stop. Let me ask you something else.",
+   "heard": "Wait, stop, let me ask you something else.",
+   "wer": 0.0
+  }
+ ],
+ "asr_latency_by_length": [
+  {
+   "audio_s": 1,
+   "median": 214.8,
+   "p95": 224.4,
+   "min": 214.0,
+   "max": 224.4,
+   "n": 8
+  },
+  {
+   "audio_s": 2,
+   "median": 226.0,
+   "p95": 236.0,
+   "min": 224.8,
+   "max": 236.0,
+   "n": 8
+  },
+  {
+   "audio_s": 4,
+   "median": 257.1,
+   "p95": 266.8,
+   "min": 256.6,
+   "max": 266.8,
+   "n": 8
+  },
+  {
+   "audio_s": 6,
+   "median": 301.0,
+   "p95": 332.0,
+   "min": 289.9,
+   "max": 332.0,
+   "n": 8
+  },
+  {
+   "audio_s": 8,
+   "median": 326.5,
+   "p95": 342.2,
+   "min": 320.8,
+   "max": 342.2,
+   "n": 8
+  },
+  {
+   "audio_s": 12,
+   "median": 395.1,
+   "p95": 428.5,
+   "min": 386.0,
+   "max": 428.5,
+   "n": 8
+  }
+ ],
+ "tts": [
+  {
+   "clause": "Sure, I can help with that.",
+   "ttfa_ms": {
+    "median": 117.3,
+    "p95": 181.6,
+    "min": 117.1,
+    "max": 181.6,
+    "n": 10
+   },
+   "rtf_median": 0.051,
+   "audio_s": 2.3,
+   "lead_silence_ms": 365,
+   "tail_silence_ms": 579
+  },
+  {
+   "clause": "Great question, the main difference is how they scale.",
+   "ttfa_ms": {
+    "median": 138.6,
+    "p95": 179.7,
+    "min": 138.3,
+    "max": 179.7,
+    "n": 10
+   },
+   "rtf_median": 0.036,
+   "audio_s": 3.88,
+   "lead_silence_ms": 411,
+   "tail_silence_ms": 604
+  },
+  {
+   "clause": "That depends on the workload you have in mind, so let me ask you a few things first.",
+   "ttfa_ms": {
+    "median": 170.6,
+    "p95": 202.2,
+    "min": 170.3,
+    "max": 202.2,
+    "n": 10
+   },
+   "rtf_median": 0.029,
+   "audio_s": 5.85,
+   "lead_silence_ms": 404,
+   "tail_silence_ms": 537
+  }
+ ],
+ "pronunciation_round_trip": [
+  {
+   "said": "HPE GreenLake is a cloud service.",
+   "spoken_text": "HPE GreenLake is a cloud service.",
+   "heard": "HPE GreenLake is a cloud service.",
+   "wer": 0.0
+  },
+  {
+   "said": "The ProLiant server supports iLO management.",
+   "spoken_text": "The ProLiant server supports iLO management.",
+   "heard": "The ProServer supports iLO management.",
+   "wer": 0.333
+  },
+  {
+   "said": "Aruba makes wireless access points.",
+   "spoken_text": "Aruba makes wireless access points.",
+   "heard": "Aruba makes wireless access points.",
+   "wer": 0.0
+  },
+  {
+   "said": "Alletra storage replaces Nimble Storage.",
+   "spoken_text": "Alletra storage replaces Nimble Storage.",
+   "heard": "Storage replaces Nimble Storage.",
+   "wer": 0.2
+  },
+  {
+   "said": "HPE Synergy is a composable infrastructure platform.",
+   "spoken_text": "HPE Synergy is a composable infrastructure platform.",
+   "heard": "HPE Synergy is an infrastructure platform.",
+   "wer": 0.286
+  },
+  {
+   "said": "Cray builds supercomputers for Hewlett Packard Enterprise.",
+   "spoken_text": "Cray builds supercomputers for Hewlett Packard Enterprise.",
+   "heard": "Cray builds supercomputers for Enterprise.",
+   "wer": 0.286
+  },
+  {
+   "said": "OneView manages servers and firmware.",
+   "spoken_text": "OneView manages servers and firmware.",
+   "heard": "OneView manages servers and firmware.",
+   "wer": 0.0
+  }
+ ]
+}

@@ -1,0 +1,9 @@
+                                                      mean ms per frame               total ms per frame      
+avatar                        frame   mean ROI   GPU blend read-back CPU paste   median   mean    p95  > 5 ms
+gulf-man-white             704x1280    419x419        2.73      0.13      0.37     0.71   3.23   9.20   30.3%
+gulf-man-white-2           704x1280    424x424        2.44      0.11      0.33     0.63   2.88   8.89   27.0%
+gulf-man-black             704x1280    427x427        2.42      0.18      0.33     0.63   2.93   8.91   27.5%
+gulf-man-black-closeup     784x1168    692x664        3.39      0.51      0.42     0.76   4.33  10.62   40.0%
+seated-man                 1280x720    442x397        2.48      0.27      0.34     0.64   3.10   8.93   29.2%
+neri                       1216x752    367x302        2.52      0.19      0.32     0.61   3.04   8.98   27.8%
+headshot-pn                 300x300    215x198        1.03      0.03      0.02     0.20   1.08   8.75   10.2%

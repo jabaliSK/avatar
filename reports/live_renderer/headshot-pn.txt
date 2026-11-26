@@ -1,0 +1,16 @@
+ready: {'type': 'ready', 'avatar': 'headshot-pn', 'width': 300, 'height': 300, 'fps': 25, 'audio_rate': 24000, 'format': 'raw'}
+  [ 10.18s] event {'type': 'speak_started', 'id': None, 'first_audio_to_first_frame_ms': 594, 't': 10.176130826992448}
+  [ 20.98s] event {'type': 'speak_done', 'id': None, 'frames': 271, 'audio_s': 10.84, 'tail_s': 0.0, 'repeated': 46, 'late': 46, 'dropped_by_renderer': 46, 'stale': 0, 'audio_underruns': 0, 'render_ms': 42.9, 'wall_s': 10.8, 't': 20.97639826798695}
+{
+  "frames_received": 373,
+  "speaking_frames": 271,
+  "bytes_per_frame_mean": 271419,
+  "first_audio_to_first_speaking_frame_ms": 598,
+  "speaking_arrival_ms": {
+    "mean": 40.0,
+    "p95": 40.2,
+    "max": 44.3
+  },
+  "distinct_frames_per_s": 20.8
+}
+wrote /work/runs_hd2/headshot-pn.mp4

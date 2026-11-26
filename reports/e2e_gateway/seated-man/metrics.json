@@ -1,0 +1,190 @@
+{
+ "video_codec_answer": "H264/90000",
+ "turns": [
+  {
+   "clip": "/opt/kka-tools/samples/q_greenlake.wav",
+   "how": "say",
+   "speech_start": 1795659275.952,
+   "speech_end": 1795659278.54,
+   "asr_text": "Hi there, can you tell me what HPE GreenLake is?",
+   "asr_text_after_speech_end_s": 1.139,
+   "reply_text": "HPE GreenLake is a cloud service that lets you pay for computing resources as you use them. It's designed for businesses that need flexible and scalable IT solutions.",
+   "first_reply_text_after_speech_end_s": 1.199,
+   "playback_signals": [
+    [
+     "ChatSignal",
+     "stream_begin",
+     "client_playback",
+     2.006
+    ],
+    [
+     "ChatSignal",
+     "stream_end",
+     "client_playback",
+     14.534
+    ]
+   ],
+   "first_audio_after_speech_end_s": 2.754,
+   "reply": {
+    "onset": 1795659281.294,
+    "end": 1795659292.275,
+    "span_s": 11.0,
+    "sound_s": 9.26,
+    "pauses_ge_200ms": [
+     0.26,
+     0.26,
+     0.3
+    ],
+    "video": {
+     "frames": 275,
+     "fps": 25.06,
+     "arrival_interval_ms": {
+      "mean": 39.91,
+      "p50": 39.99,
+      "p95": 50.11,
+      "max": 91.89
+     },
+     "rtp_interval_ms": {
+      "mean": 40.0,
+      "p50": 40.0,
+      "p95": 40.0,
+      "max": 40.0
+     },
+     "frame_diff": {
+      "mean": 4.61,
+      "p50": 4.6,
+      "p95": 10.0,
+      "max": 12.71
+     }
+    }
+   }
+  }
+ ],
+ "replies": [
+  {
+   "onset": 1795659281.294,
+   "end": 1795659292.275,
+   "span_s": 11.0,
+   "sound_s": 9.26,
+   "pauses_ge_200ms": [
+    0.26,
+    0.26,
+    0.3
+   ],
+   "video": {
+    "frames": 275,
+    "fps": 25.06,
+    "arrival_interval_ms": {
+     "mean": 39.91,
+     "p50": 39.99,
+     "p95": 50.11,
+     "max": 91.89
+    },
+    "rtp_interval_ms": {
+     "mean": 40.0,
+     "p50": 40.0,
+     "p95": 40.0,
+     "max": 40.0
+    },
+    "frame_diff": {
+     "mean": 4.61,
+     "p50": 4.6,
+     "p95": 10.0,
+     "max": 12.71
+    }
+   }
+  }
+ ],
+ "script_failures": [],
+ "video_all": {
+  "frames": 591,
+  "fps": 25.0,
+  "arrival_interval_ms": {
+   "mean": 40.0,
+   "p50": 39.89,
+   "p95": 48.41,
+   "max": 91.89
+  },
+  "rtp_interval_ms": {
+   "mean": 40.0,
+   "p50": 40.0,
+   "p95": 40.0,
+   "max": 40.0
+  },
+  "frame_diff": {
+   "mean": 2.46,
+   "p50": 0.78,
+   "p95": 8.95,
+   "max": 12.71
+  }
+ },
+ "video_kbps": 930.0,
+ "video_size": [
+  1280,
+  720
+ ],
+ "audio_arrival_interval_ms": {
+  "mean": 20.0,
+  "p50": 20.03,
+  "p95": 22.84,
+  "max": 75.85
+ },
+ "audio_kbps": 41.2,
+ "ice_pair": "local host 192.168.16.6:59425 <-> remote host 192.168.16.4:47914",
+ "webrtc_stats": {
+  "remote-inbound-rtp_140546549495056_725262744": {
+   "type": "remote-inbound-rtp",
+   "id": "remote-inbound-rtp_140546549495056_725262744",
+   "ssrc": 725262744,
+   "kind": "audio",
+   "transportId": "transport_140546549497168",
+   "packetsReceived": 1655,
+   "packetsLost": 0,
+   "jitter": 0.0006666666666666666,
+   "localId": "outbound-rtp_140546549495056_725262744",
+   "roundTripTime": 0.000502728820878854,
+   "fractionLost": 0.0
+  },
+  "remote-inbound-rtp_140546552370192_944853794": {
+   "type": "remote-inbound-rtp",
+   "id": "remote-inbound-rtp_140546552370192_944853794",
+   "ssrc": 944853794,
+   "kind": "video",
+   "transportId": "transport_140546549497168",
+   "packetsReceived": 168,
+   "packetsLost": 0,
+   "jitter": 0.0004111111111111111,
+   "localId": "outbound-rtp_140546552370192_944853794",
+   "roundTripTime": 0.0005254246336217575,
+   "fractionLost": 0.0
+  },
+  "inbound-rtp_140546549580496_2872780702": {
+   "type": "inbound-rtp",
+   "id": "inbound-rtp_140546549580496_2872780702",
+   "ssrc": 2872780702,
+   "kind": "audio",
+   "transportId": "transport_140546549497168",
+   "packetsReceived": 1232,
+   "packetsLost": 0,
+   "jitter": 0.0009583333333333333,
+   "trackIdentifier": "a3bc2574-bdad-42bb-a4fc-c3c3d668c5a6",
+   "remoteId": "remote-outbound-rtp_140546549580496_2872780702",
+   "bytesReceived": 126472,
+   "nackCount": 0
+  },
+  "inbound-rtp_140546549584656_2322377443": {
+   "type": "inbound-rtp",
+   "id": "inbound-rtp_140546549584656_2322377443",
+   "ssrc": 2322377443,
+   "kind": "video",
+   "transportId": "transport_140546549497168",
+   "packetsReceived": 3304,
+   "packetsLost": 0,
+   "jitter": 0.0018444444444444443,
+   "trackIdentifier": "2f1bb86f-e06c-461b-bc12-176986b6c27d",
+   "remoteId": "remote-outbound-rtp_140546549584656_2322377443",
+   "bytesReceived": 2861150,
+   "nackCount": 0
+  }
+ }
+}

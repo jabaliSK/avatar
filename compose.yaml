@@ -1,0 +1,203 @@
+# Two-stage hybrid avatar stack, pinned to ONE GPU (GPU_ID in .env, default 0).
+# Start order matters on a shared card: vllm first (it sizes its KV cache from free memory), then the rest.
+name: kkavatar
+
+x-gpu: &gpu
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            device_ids: ["${GPU_ID:-0}"]   # container only ever sees this one device
+            capabilities: [gpu]
+
+# The gateway logs what was said and answered. Docker keeps container logs until the container is removed unless they rotate.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "5"
+
+services:
+  vllm:
+    <<: *gpu
+    # Apache-2.0. v0.27.1 is what this stack was tested with (digest sha256:0a51ea5b4ae2dc5d81890e5173f54203d2a3ae0cfffe51b8fd2afd4391bfd967);
+    # `latest` would move under a delivered system.
+    image: vllm/vllm-openai:v0.27.1
+    container_name: kka-vllm
+    restart: unless-stopped
+    logging: *logging
+    ipc: host
+    environment:
+      HF_HUB_OFFLINE: "1"
+      VLLM_NO_USAGE_STATS: "1"
+      DO_NOT_TRACK: "1"
+    volumes:
+      - ${MODELS_DIR:-./models}/qwen3-8b-fp8:/models/qwen3-8b-fp8:ro
+      - ./.cache/vllm:/root/.cache/vllm
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:${LLM_PORT:-18100}:8000"
+    command:
+      - --model=/models/qwen3-8b-fp8
+      - --served-model-name=${LLM_SERVED_NAME:-qwen3-8b}
+      - --host=0.0.0.0
+      - --port=8000
+      - --gpu-memory-utilization=${LLM_GPU_MEM_UTIL:-0.22}
+      - --max-model-len=${LLM_MAX_MODEL_LEN:-8192}
+      - --max-num-seqs=16
+      # Voice avatar: Qwen3 must NOT emit <think> blocks (they would be spoken and add seconds of latency).
+      - --default-chat-template-kwargs={"enable_thinking":false}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 60s
+
+  # Live head renderer: Ditto (MediaPipe-only) on TensorRT + GPU compositor + 25 fps player, behind a WebSocket API.
+  # First start on a new GPU architecture builds the TensorRT engines (~20-25 min, cached in ./engines).
+  renderer:
+    <<: *gpu
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.renderer
+      target: app
+    image: kka-renderer:latest
+    container_name: kka-renderer
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      vllm:
+        condition: service_healthy   # vllm sizes its KV cache from the free memory it sees, so it has to start before the renderer
+    healthcheck:
+      # The image's check, with a start period long enough for the one-off engine build on a new GPU model (the service answers 503
+      # "loading" meanwhile). Without it the container would turn unhealthy after 2 minutes and `docker compose up` would give up.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8290/healthz', timeout=4)"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 35m
+    environment:
+      KKA_PRELOAD: ${RENDERER_PRELOAD:-}         # avatar names to load at boot ("all" = every one); others load on first use
+      KKA_OVERLAP: ${RENDERER_OVERLAP:-70}       # 70 = ~1.0 s of speech before the first frame; 75 = ~0.4 s at ~2x motion cost
+      KKA_STEPS: ${RENDERER_STEPS:-10}
+    volumes:
+      - ${MODELS_DIR:-./models}/ditto-talkinghead:/models/ditto-talkinghead:ro
+      - ${AVATARS_DIR:-./avatars}:/avatars:ro
+      - ./engines:/engines
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:${RENDERER_PORT:-18110}:8290"
+
+  # Conversation gateway: OpenAvatarChat (WebRTC + web UI) + Silero VAD + Faster-Whisper + Kokoro + the renderer bridge.
+  # Talks to vllm and renderer over the compose network. Web UI: http://localhost:${GATEWAY_PORT} (localhost is a secure context,
+  # so the microphone works without HTTPS). For other machines: GATEWAY_BIND_ADDR, GATEWAY_TLS=1 and the coturn relay below
+  # (see docs/RUNBOOK.md, "Network, security and privacy").
+  gateway:
+    <<: *gpu
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.gateway
+      target: app
+    image: kka-gateway:latest
+    container_name: kka-gateway
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      vllm:
+        condition: service_healthy
+      renderer:
+        condition: service_healthy
+    environment:
+      HF_HUB_OFFLINE: "1"
+      KKA_AVATAR: ${GATEWAY_AVATAR:-gulf-man-white}  # default avatar; switch later by writing a name to ./run/avatar
+      GATEWAY_TLS: ${GATEWAY_TLS:-0}
+      GATEWAY_TLS_SAN: ${GATEWAY_TLS_SAN:-}          # extra subjectAltName entries, e.g. IP:10.0.0.5
+      GATEWAY_TLS_CN: ${GATEWAY_TLS_CN:-localhost}
+      KKA_H264_KBPS: ${GATEWAY_H264_KBPS:-4000}
+      KKA_H264_MAX_KBPS: ${GATEWAY_H264_MAX_KBPS:-8000}
+      KKA_RECONNECT_TAKEOVER: ${GATEWAY_RECONNECT_TAKEOVER:-1}  # 1: a browser reconnecting from the same address replaces its stale session at once
+      MALLOC_ARENA_MAX: "2"                          # glibc: fewer per-thread heaps, so sessions fragment (and keep) much less memory
+      KKA_TURN_HOST: ${TURN_HOST:-}                  # set: browsers are given the coturn relay at this address
+      KKA_TURN_USER: ${TURN_USER:-kka}
+      KKA_TURN_PASSWORD: ${TURN_PASSWORD:-}
+    volumes:
+      - ${MODELS_DIR:-./models}/faster-whisper-large-v3-turbo:/models/faster-whisper-large-v3-turbo:ro
+      - ${MODELS_DIR:-./models}/Kokoro-82M:/models/Kokoro-82M:ro
+      - ./run:/run/kka
+      - numba-cache:/opt/numba-cache  # librosa's JIT-compiled kernels: ~17 s to build, ~1.6 s to load, survives container re-creation
+    ports:
+      # The only port meant for other machines. The LLM and renderer ports above stay on BIND_ADDR (127.0.0.1): they have no login.
+      - "${GATEWAY_BIND_ADDR:-${BIND_ADDR:-127.0.0.1}}:${GATEWAY_PORT:-8282}:8282"
+
+  # TURN relay (coturn, BSD-3-Clause) for browsers on other machines. WebRTC media is UDP to the gateway container's private address,
+  # which another machine cannot reach, so the browser sends it here and coturn passes it on to the gateway on the compose network
+  # (relay ports 49160-49199 stay inside the container: the gateway answers the relay's private address, so they need no publishing).
+  # Starts only with COMPOSE_PROFILES=network in .env, next to TURN_HOST, TURN_USER and TURN_PASSWORD. Publishes UDP and TCP 3478 on
+  # GATEWAY_BIND_ADDR. Docker publishes around the host firewall (ufw), so nothing is opened there.
+  coturn:
+    image: coturn/coturn:4.19.2-trixie@sha256:ccdbc51e6f072130b0fc9eebda21f8d026d0a25581746c52557e887818011a3f
+    container_name: kka-coturn
+    profiles: ["network"]
+    restart: unless-stopped
+    logging: *logging
+    entrypoint: ["/bin/sh", "/opt/kka/coturn-entrypoint.sh"]
+    environment:
+      TURN_EXTERNAL_IP: ${TURN_HOST:-}
+      TURN_USER: ${TURN_USER:-kka}
+      TURN_PASSWORD: ${TURN_PASSWORD:-}
+    volumes:
+      - ./docker/coturn-entrypoint.sh:/opt/kka/coturn-entrypoint.sh:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]   # the turnserver binary carries this file capability; without it the container cannot start it
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      # A real STUN binding request to the listener (turnutils_stunclient does not set its exit code, so match its output).
+      test: ["CMD-SHELL", "turnutils_stunclient $$(hostname -i) 2>&1 | grep -q 'reflexive addr'"]
+      interval: 15s
+      timeout: 6s
+      retries: 3
+      start_period: 10s
+    ports:
+      - "${GATEWAY_BIND_ADDR:-${BIND_ADDR:-127.0.0.1}}:3478:3478/udp"
+      - "${GATEWAY_BIND_ADDR:-${BIND_ADDR:-127.0.0.1}}:3478:3478/tcp"
+
+  # One-shot avatar onboarding:  docker compose run --rm onboard --image /images/portrait.png --name aisha
+  # With Stage A clips:          docker compose run --rm onboard --image /images/portrait.png --name aisha --loop speaking=/loops/aisha/speaking.mp4
+  onboard:
+    <<: *gpu
+    image: kka-renderer:latest
+    profiles: ["tools"]
+    entrypoint: ["python", "/app/tools/onboard.py"]
+    volumes:
+      - ${MODELS_DIR:-./models}/ditto-talkinghead:/models/ditto-talkinghead:ro
+      - ${AVATARS_DIR:-./avatars}:/avatars
+      - ./engines:/engines
+      - ${IMAGES_DIR:-./images}:/images:ro
+      - ${LOOPS_DIR:-./loops}:/loops:ro
+
+  # Stage A, offline, once per avatar: EchoMimicV3-Flash body/gesture loops, after ~2 min of model loading about 5.5 min per 3.2 s clip
+  # at --sample-area 960 (26 GB peak; the host's avatars) or about 2.7 min at the default 768 (22.7 GB), on this GPU.
+  #   docker compose run --rm bodygen --job aisha=/images/portrait.png --subject "aisha=A woman in a blue jacket" \
+  #   --states speaking --speech /speech/sample.wav [--sample-area 960]
+  # Stop the live services first when timing matters: two processes on one GPU time-slice each other, which distorts everything.
+  bodygen:
+    <<: *gpu
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.bodygen
+      target: app
+    image: kka-bodygen:latest
+    profiles: ["tools"]
+    entrypoint: ["python", "/app/generate_loops.py"]
+    volumes:
+      - ${MODELS_DIR:-./models}/echomimic_v3:/models/echomimic_v3:ro
+      - ${IMAGES_DIR:-./images}:/images:ro
+      - ./services/bodygen/speech:/speech:ro
+      - ${LOOPS_DIR:-./loops}:/out
+
+volumes:
+  numba-cache:

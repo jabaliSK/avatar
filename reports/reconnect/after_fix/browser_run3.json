@@ -1,0 +1,110 @@
+{
+ "url": "https://10.25.73.101:8282",
+ "relay_only": true,
+ "webrtc": {
+  "connection": "connected",
+  "ice": "connected",
+  "pair": {
+   "local": {
+    "type": "prflx",
+    "protocol": "udp",
+    "relayProtocol": "udp",
+    "address": ":49184"
+   },
+   "remote": {
+    "type": "host",
+    "protocol": "udp",
+    "relayProtocol": null,
+    "address": "192.168.16.4:37709"
+   },
+   "rtt_ms": 1
+  },
+  "audio": {
+   "concealed_samples": 1200,
+   "total_samples": 1331520,
+   "jitter_buffer_ms": 38.715728715728716,
+   "codec": "audio/opus"
+  },
+  "video": {
+   "width": 704,
+   "height": 1280,
+   "decoded": 692,
+   "dropped": 0,
+   "freezes": 0,
+   "jitter_buffer_ms": 23.010313583815027,
+   "codec": "video/H264"
+  },
+  "sent": {
+   "audio": 52771,
+   "video": 1187388
+  }
+ },
+ "video_elements_wxh": [
+  [
+   640,
+   480
+  ],
+  [
+   704,
+   1280
+  ]
+ ],
+ "page_text": "",
+ "ice_log": [
+  {
+   "t_ms": 18,
+   "gathering": "gathering"
+  },
+  {
+   "t_ms": 79,
+   "candidate": "relay/udp"
+  },
+  {
+   "t_ms": 80,
+   "candidate": "relay/udp"
+  },
+  {
+   "t_ms": 81,
+   "candidate": "relay/udp"
+  },
+  {
+   "t_ms": 82,
+   "candidate": "relay/udp/tcp"
+  },
+  {
+   "t_ms": 82,
+   "candidate": "relay/udp/tcp"
+  },
+  {
+   "t_ms": 83,
+   "candidate": "relay/udp/tcp"
+  },
+  {
+   "t_ms": 141,
+   "gathering": "complete"
+  },
+  {
+   "t_ms": 141,
+   "candidate": "end"
+  },
+  {
+   "t_ms": 515,
+   "connection": "connecting"
+  },
+  {
+   "t_ms": 525,
+   "connection": "connected"
+  }
+ ],
+ "speech_s": [
+  8.65,
+  11.45
+ ],
+ "reply_sound_after_speech_end_s": 2.6,
+ "reply_span_s": 10.4,
+ "video_during_reply": {
+  "decoded_fps": 24.9,
+  "dropped": 0,
+  "freezes": 0
+ }
+}

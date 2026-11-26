@@ -1,0 +1,46 @@
+# Conversation gateway: OpenAvatarChat v0.6.0 (WebRTC transport, Silero VAD, turn-taking, LLM client) + the kka handlers
+# (Faster-Whisper ASR, Kokoro TTS, barge-in VAD, renderer bridge). Build from the project root:
+#   docker build -f docker/Dockerfile.gateway --target app -t kka-gateway:latest .
+FROM kka-base:cu128 AS deps
+
+COPY docker/constraints.gateway.txt /opt/constraints.txt
+ENV PIP_CONSTRAINT=/opt/constraints.txt \
+    PYTHONDONTWRITEBYTECODE=1
+
+# espeak-ng is GPL-3 and is not needed here: Kokoro runs on misaki's built-in dictionaries (see handlers/kka/tts/kokoro_tts.py).
+# Bases built before espeak-ng was dropped from Dockerfile.base still carry it, so it is purged when present and its absence is
+# asserted. libopus0 is the system library behind opuslib.
+RUN if dpkg -s espeak-ng >/dev/null 2>&1; then apt-get purge -y --auto-remove espeak-ng espeak-ng-data libespeak-ng1; fi \
+    && ! dpkg -s espeak-ng >/dev/null 2>&1 \
+    && apt-get update && apt-get install -y --no-install-recommends libopus0 openssl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY docker/requirements.gateway.txt /tmp/requirements.txt
+RUN pip install -r /tmp/requirements.txt
+
+# kokoro/misaki are installed --no-deps because misaki's espeak extra pulls GPL phonemizer-fork + espeakng-loader; the imports
+# they really need are listed explicitly. en_core_web_sm (MIT) comes from its wheel so misaki never tries to download it.
+RUN pip install --no-deps kokoro==0.9.4 misaki==0.9.4 \
+    && pip install addict regex "spacy>=3.8,<3.9" num2words "transformers<5" \
+    && pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+
+
+FROM deps AS app
+# numba (used by librosa inside the stock VAD) caches its compiled kernels here; compose mounts a volume on it.
+ENV NUMBA_CACHE_DIR=/opt/numba-cache
+# OpenAvatarChat stays byte-identical to the pinned release; everything custom lives in /opt/kka-handlers and the config.
+COPY third_party/OpenAvatarChat/src /opt/oac/src
+COPY services/gateway/handlers /opt/kka-handlers
+COPY services/gateway/config /opt/oac/config
+COPY services/gateway/launch.py /opt/kka/launch.py
+COPY services/gateway/rtc_session.py /opt/kka/rtc_session.py
+COPY services/gateway/render_config.py /opt/kka/render_config.py
+COPY docker/gateway-entrypoint.sh /opt/kka/entrypoint.sh
+RUN chmod +x /opt/kka/entrypoint.sh && mkdir -p /opt/oac/logs /run/kka /opt/numba-cache
+
+WORKDIR /opt/oac
+EXPOSE 8282
+HEALTHCHECK --interval=15s --timeout=5s --start-period=180s --retries=3 \
+    CMD python -c "import os, ssl, urllib.request; c = ssl._create_unverified_context(); \
+s = 'https' if os.path.isfile('/opt/kka/tls/cert.pem') else 'http'; urllib.request.urlopen(s + '://127.0.0.1:8282/', timeout=4, context=c)"
+ENTRYPOINT ["/opt/kka/entrypoint.sh"]

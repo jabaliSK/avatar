@@ -1,0 +1,276 @@
+{
+ "video_codec_answer": "H264/90000",
+ "turns": [
+  {
+   "clip": "/opt/kka-tools/samples/q_long.wav",
+   "how": "say",
+   "speech_start": 1795659883.382,
+   "speech_end": 1795659895.215,
+   "asr_text": "I'm planning to move our virtual machines from an old data centre to a new platform next year, and I would like to understand what options we have for storage and networking, and how long a migration like that usually takes.",
+   "asr_text_after_speech_end_s": 1.286,
+   "reply_text": "Moving VMs usually takes a few weeks to a couple of months, depending on size and complexity. For storage, options include cloud-based solutions, SAN, NAS, or hybrid setups. Networking often involves VLANs, firewalls, and possibly SD-WAN for flexibility. Would you like to know more about specific options?",
+   "first_reply_text_after_speech_end_s": 1.377,
+   "playback_signals": [
+    [
+     "ChatSignal",
+     "stream_begin",
+     "client_playback",
+     2.328
+    ]
+   ],
+   "first_audio_after_speech_end_s": 3.442,
+   "reply": {
+    "onset": 1795659898.657,
+    "end": 1795659902.636,
+    "span_s": 4.0,
+    "sound_s": 3.38,
+    "pauses_ge_200ms": [
+     0.3
+    ],
+    "video": {
+     "frames": 100,
+     "fps": 25.05,
+     "arrival_interval_ms": {
+      "mean": 39.93,
+      "p50": 39.9,
+      "p95": 48.15,
+      "max": 64.82
+     },
+     "rtp_interval_ms": {
+      "mean": 40.0,
+      "p50": 40.0,
+      "p95": 40.0,
+      "max": 40.0
+     },
+     "frame_diff": {
+      "mean": 3.03,
+      "p50": 2.76,
+      "p95": 6.41,
+      "max": 8.88
+     }
+    }
+   }
+  },
+  {
+   "clip": "/opt/kka-tools/samples/q_interrupt.wav",
+   "how": "barge_on_audio",
+   "speech_start": 1795659901.842,
+   "speech_end": 1795659903.949,
+   "asr_text": "Wait, stop, let me ask you something else.",
+   "asr_text_after_speech_end_s": 1.176,
+   "reply_text": "Sure, what would you like to ask?",
+   "first_reply_text_after_speech_end_s": 1.237,
+   "playback_signals": [
+    [
+     "ChatSignal",
+     "interrupt",
+     "client_playback",
+     -1.464
+    ],
+    [
+     "ChatSignal",
+     "stream_cancel",
+     "client_playback",
+     -1.464
+    ],
+    [
+     "ChatSignal",
+     "stream_begin",
+     "client_playback",
+     1.919
+    ],
+    [
+     "ChatSignal",
+     "stream_end",
+     "client_playback",
+     4.747
+    ]
+   ],
+   "first_audio_after_speech_end_s": 2.568,
+   "reply": {
+    "onset": 1795659906.517,
+    "end": 1795659907.917,
+    "span_s": 1.42,
+    "sound_s": 1.36,
+    "pauses_ge_200ms": [],
+    "video": {
+     "frames": 35,
+     "fps": 25.03,
+     "arrival_interval_ms": {
+      "mean": 39.96,
+      "p50": 40.0,
+      "p95": 42.26,
+      "max": 43.79
+     },
+     "rtp_interval_ms": {
+      "mean": 40.0,
+      "p50": 40.0,
+      "p95": 40.0,
+      "max": 40.0
+     },
+     "frame_diff": {
+      "mean": 2.68,
+      "p50": 2.5,
+      "p95": 5.12,
+      "max": 5.76
+     }
+    }
+   },
+   "old_reply_stopped_after_s": 0.794
+  }
+ ],
+ "replies": [
+  {
+   "onset": 1795659898.657,
+   "end": 1795659902.636,
+   "span_s": 4.0,
+   "sound_s": 3.38,
+   "pauses_ge_200ms": [
+    0.3
+   ],
+   "video": {
+    "frames": 100,
+    "fps": 25.05,
+    "arrival_interval_ms": {
+     "mean": 39.93,
+     "p50": 39.9,
+     "p95": 48.15,
+     "max": 64.82
+    },
+    "rtp_interval_ms": {
+     "mean": 40.0,
+     "p50": 40.0,
+     "p95": 40.0,
+     "max": 40.0
+    },
+    "frame_diff": {
+     "mean": 3.03,
+     "p50": 2.76,
+     "p95": 6.41,
+     "max": 8.88
+    }
+   }
+  },
+  {
+   "onset": 1795659906.517,
+   "end": 1795659907.917,
+   "span_s": 1.42,
+   "sound_s": 1.36,
+   "pauses_ge_200ms": [],
+   "video": {
+    "frames": 35,
+    "fps": 25.03,
+    "arrival_interval_ms": {
+     "mean": 39.96,
+     "p50": 40.0,
+     "p95": 42.26,
+     "max": 43.79
+    },
+    "rtp_interval_ms": {
+     "mean": 40.0,
+     "p50": 40.0,
+     "p95": 40.0,
+     "max": 40.0
+    },
+    "frame_diff": {
+     "mean": 2.68,
+     "p50": 2.5,
+     "p95": 5.12,
+     "max": 5.76
+    }
+   }
+  }
+ ],
+ "script_failures": [],
+ "video_all": {
+  "frames": 1020,
+  "fps": 25.0,
+  "arrival_interval_ms": {
+   "mean": 40.0,
+   "p50": 40.08,
+   "p95": 43.67,
+   "max": 64.82
+  },
+  "rtp_interval_ms": {
+   "mean": 40.0,
+   "p50": 40.0,
+   "p95": 40.0,
+   "max": 40.0
+  },
+  "frame_diff": {
+   "mean": 0.66,
+   "p50": 0.15,
+   "p95": 4.06,
+   "max": 10.26
+  }
+ },
+ "video_kbps": 1129.0,
+ "video_size": [
+  704,
+  1280
+ ],
+ "audio_arrival_interval_ms": {
+  "mean": 20.0,
+  "p50": 19.98,
+  "p95": 22.74,
+  "max": 47.87
+ },
+ "audio_kbps": 13.8,
+ "ice_pair": "local host 192.168.16.6:41879 <-> remote host 192.168.16.4:57035",
+ "webrtc_stats": {
+  "remote-inbound-rtp_139790991814992_2070115062": {
+   "type": "remote-inbound-rtp",
+   "id": "remote-inbound-rtp_139790991814992_2070115062",
+   "ssrc": 2070115062,
+   "kind": "audio",
+   "transportId": "transport_139790991817168",
+   "packetsReceived": 2060,
+   "packetsLost": 0,
+   "jitter": 0.0006666666666666666,
+   "localId": "outbound-rtp_139790991814992_2070115062",
+   "roundTripTime": 0.00053717792362792,
+   "fractionLost": 0.0
+  },
+  "remote-inbound-rtp_139790991868944_3873836339": {
+   "type": "remote-inbound-rtp",
+   "id": "remote-inbound-rtp_139790991868944_3873836339",
+   "ssrc": 3873836339,
+   "kind": "video",
+   "transportId": "transport_139790991817168",
+   "packetsReceived": 208,
+   "packetsLost": 0,
+   "jitter": 0.00035555555555555557,
+   "localId": "outbound-rtp_139790991868944_3873836339",
+   "roundTripTime": 0.0007241014145261844,
+   "fractionLost": 0.0
+  },
+  "inbound-rtp_139790991818512_95393290": {
+   "type": "inbound-rtp",
+   "id": "inbound-rtp_139790991818512_95393290",
+   "ssrc": 95393290,
+   "kind": "audio",
+   "transportId": "transport_139790991817168",
+   "packetsReceived": 2093,
+   "packetsLost": 0,
+   "jitter": 0.0009791666666666666,
+   "trackIdentifier": "9c1c5e92-d9c0-4560-a8dd-2679682be0eb",
+   "remoteId": "remote-outbound-rtp_139790991818512_95393290",
+   "bytesReceived": 71837,
+   "nackCount": 0
+  },
+  "inbound-rtp_139790991872016_1142649636": {
+   "type": "inbound-rtp",
+   "id": "inbound-rtp_139790991872016_1142649636",
+   "ssrc": 1142649636,
+   "kind": "video",
+   "transportId": "transport_139790991817168",
+   "packetsReceived": 7390,
+   "packetsLost": 0,
+   "jitter": 0.0011333333333333334,
+   "trackIdentifier": "9ae0e537-ab66-49d8-ad21-08fd36f1b42e",
+   "remoteId": "remote-outbound-rtp_139790991872016_1142649636",
+   "bytesReceived": 5895918,
+   "nackCount": 0
+  }
+ }
+}

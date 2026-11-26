@@ -1,0 +1,44 @@
+{
+  "video": "/reports/e2e_gateway/gulf-man-white/session.mp4",
+  "frames": 834,
+  "fps": 25.0,
+  "face_crop": [
+    0.277,
+    0.085,
+    0.74,
+    0.385
+  ],
+  "speech_window_s": [
+    19.2,
+    30.08
+  ],
+  "face_found_pct": 100.0,
+  "lip_gap": {
+    "lag_ms": 7,
+    "lag_ms_90pct": [
+      -48,
+      17
+    ],
+    "corr_at_peak": 0.182,
+    "corr_best_elsewhere": 0.021,
+    "corr_at_zero": 0.182,
+    "mouth_p5_p95": [
+      0.03,
+      0.162
+    ]
+  },
+  "jaw_open": {
+    "lag_ms": 16,
+    "lag_ms_90pct": [
+      -78,
+      45
+    ],
+    "corr_at_peak": 0.137,
+    "corr_best_elsewhere": 0.022,
+    "corr_at_zero": 0.137,
+    "mouth_p5_p95": [
+      0.059,
+      0.634
+    ]
+  }
+}

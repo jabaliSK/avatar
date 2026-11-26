@@ -1,0 +1,16 @@
+ready: {'type': 'ready', 'avatar': 'gulf-man-white-2', 'width': 704, 'height': 1280, 'fps': 25, 'audio_rate': 24000, 'format': 'raw'}
+  [ 11.46s] event {'type': 'speak_started', 'id': None, 'first_audio_to_first_frame_ms': 594, 't': 11.46437668899307}
+  [ 23.35s] event {'type': 'speak_done', 'id': None, 'frames': 298, 'audio_s': 10.84, 'tail_s': 1.08, 'repeated': 64, 'late': 63, 'dropped_by_renderer': 63, 'stale': 0, 'audio_underruns': 0, 'render_ms': 43.2, 'wall_s': 11.88, 't': 23.345420720987022}
+{
+  "frames_received": 400,
+  "speaking_frames": 298,
+  "bytes_per_frame_mean": 2704814,
+  "first_audio_to_first_speaking_frame_ms": 600,
+  "speaking_arrival_ms": {
+    "mean": 40.0,
+    "p95": 41.9,
+    "max": 44.4
+  },
+  "distinct_frames_per_s": 19.6
+}
+wrote /work/runs_hd2/gulf-man-white-2.mp4

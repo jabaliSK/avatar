@@ -1,0 +1,35 @@
+# Shared base for every service image (renderer, onboard, gateway). Python 3.11 + torch 2.8.0/cu128 matches
+# OpenAvatarChat's pins; CUDA 12.8 wheels run on the host's 550 driver via CUDA minor-version compatibility.
+# `devel` is kept so nvcc is available for the TensorRT grid_sample_3d plugin (compiled with explicit SASS per target GPU).
+FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    VIRTUAL_ENV=/opt/venv \
+    PATH=/opt/venv/bin:$PATH \
+    HF_HUB_OFFLINE=1 \
+    TRANSFORMERS_OFFLINE=1 \
+    CUDA_DEVICE_ORDER=PCI_BUS_ID \
+    NVIDIA_DRIVER_CAPABILITIES=compute,utility,video
+
+# espeak-ng (GPL-3) is deliberately absent: Kokoro runs on misaki's built-in dictionaries instead of the espeak fallback.
+RUN apt-get update && apt-get install -y --no-install-recommends software-properties-common ca-certificates curl git gnupg \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get update && apt-get install -y --no-install-recommends \
+        python3.11 python3.11-dev python3.11-venv \
+        build-essential cmake ninja-build pkg-config \
+        ffmpeg libsndfile1 libgl1 libglib2.0-0 libgomp1 \
+    && apt-get purge -y software-properties-common gnupg && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python3.11 -m venv /opt/venv && pip install -U pip setuptools wheel
+
+RUN pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 \
+        --index-url https://download.pytorch.org/whl/cu128 --extra-index-url https://pypi.org/simple
+
+RUN pip install "numpy==1.26.4" scipy soundfile librosa==0.10.2.post1 opencv-python-headless==4.10.0.84 \
+        pillow loguru pyyaml tqdm requests einops safetensors "huggingface-hub>=0.23.2,<1.0"
+
+WORKDIR /workspace

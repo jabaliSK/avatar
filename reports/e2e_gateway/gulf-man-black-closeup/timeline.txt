@@ -1,0 +1,15 @@
+turn 1  q_greenlake.wav (say)
+  heard : 'Hi there, can you tell me what HPE GreenLake is?'
+  reply : 'HPE GreenLake is a cloud service that lets you rent computing resources on a pay-as-you-go basis. It'
+  after speech end    step    stage
+    +0.000 s      +0.000  you stop speaking
+    +1.175 s      +1.175  ASR text ready  (decode 260 ms, includes the VAD end-of-speech wait)
+    +1.237 s      +0.062  first LLM token reaches TTS
+    +2.218 s      +0.981  first clause synthesised  (TTS 766 ms for the clause)
+    +2.239 s      +0.021  renderer receives the first audio
+    +2.743 s      +0.504  renderer: first frame ready  (498 ms after its first audio)
+    +2.758 s      +0.015  gateway receives the first video frame
+    +2.964 s      +0.206  reply sound reaches the client  (WebRTC transport + jitter buffer)
+  -> first reply sound 2.96 s after speech end; the longest single step is 'ASR text ready' (1.17 s)
+  renderer: 298 frames, 66 repeated (22%), 43.5 ms to render a frame (a 25 fps clock allows 40)
+

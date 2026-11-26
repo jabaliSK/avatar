@@ -1,0 +1,26 @@
+# Stage A: EchoMimicV3-Flash body / gesture loop generator (offline, once per avatar).
+# Build from the project root:  docker build -f docker/Dockerfile.bodygen -t kka-bodygen:latest .
+#
+# Only the packages the Flash inference path imports are installed. Upstream's requirements.txt also lists tensorflow and
+# retina-face (a face mask for its multi-speaker mode, not used by infer_flash.py), gradio, decord, moviepy and mmgp.
+FROM kka-base:cu128 AS deps
+
+COPY docker/constraints.bodygen.txt /opt/constraints.txt
+ENV PIP_CONSTRAINT=/opt/constraints.txt
+
+RUN pip install "diffusers==0.35.1" "transformers==4.46.3" "accelerate>=0.34" omegaconf pyloudnorm imageio sentencepiece \
+        ftfy av
+
+# espeak-ng (GPL-3) is not used here. Bases built before it was dropped from Dockerfile.base still carry it, so it is purged
+# when present and its absence is asserted.
+RUN if dpkg -s espeak-ng >/dev/null 2>&1; then apt-get purge -y --auto-remove espeak-ng espeak-ng-data libespeak-ng1; fi; \
+    ! dpkg -s espeak-ng >/dev/null 2>&1
+
+ENV PYTHONPATH=/app:/opt/echomimic_v3 \
+    PYTHONDONTWRITEBYTECODE=1
+WORKDIR /app
+
+
+FROM deps AS app
+COPY third_party/echomimic_v3 /opt/echomimic_v3
+COPY services/bodygen /app

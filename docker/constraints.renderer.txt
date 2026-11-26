@@ -1,0 +1,5 @@
+# numpy and protobuf are frozen for every pip call in the renderer image:
+#  - librosa 0.10 / numba 0.60 need numpy 1.x (OpenAvatarChat also pins numpy<=1.26.4)
+#  - mediapipe 0.10.9 needs protobuf 3.x
+numpy==1.26.4
+protobuf>=3.20.3,<4

@@ -1,0 +1,44 @@
+{
+  "video": "neri.mp4",
+  "frames": 399,
+  "fps": 25.0,
+  "face_crop": [
+    0.453,
+    0.0,
+    0.684,
+    0.464
+  ],
+  "speech_window_s": [
+    2.44,
+    13.24
+  ],
+  "face_found_pct": 100.0,
+  "lip_gap": {
+    "lag_ms": 35,
+    "lag_ms_90pct": [
+      2,
+      73
+    ],
+    "corr_at_peak": 0.248,
+    "corr_best_elsewhere": 0.134,
+    "corr_at_zero": 0.215,
+    "mouth_p5_p95": [
+      0.033,
+      0.17
+    ]
+  },
+  "jaw_open": {
+    "lag_ms": -259,
+    "lag_ms_90pct": [
+      -360,
+      -236
+    ],
+    "corr_at_peak": 0.098,
+    "corr_best_elsewhere": 0.07,
+    "corr_at_zero": 0.07,
+    "mouth_p5_p95": [
+      0.041,
+      0.674
+    ]
+  }
+}

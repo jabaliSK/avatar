@@ -1,0 +1,16 @@
+ready: {'type': 'ready', 'avatar': 'neri', 'width': 1216, 'height': 752, 'fps': 25, 'audio_rate': 24000, 'format': 'raw'}
+  [ 11.33s] event {'type': 'speak_started', 'id': None, 'first_audio_to_first_frame_ms': 548, 't': 11.328094535012497}
+  [ 23.21s] event {'type': 'speak_done', 'id': None, 'frames': 298, 'audio_s': 10.84, 'tail_s': 1.08, 'repeated': 65, 'late': 64, 'dropped_by_renderer': 64, 'stale': 0, 'audio_underruns': 0, 'render_ms': 43.2, 'wall_s': 11.88, 't': 23.20878853200702}
+{
+  "frames_received": 399,
+  "speaking_frames": 298,
+  "bytes_per_frame_mean": 2744754,
+  "first_audio_to_first_speaking_frame_ms": 560,
+  "speaking_arrival_ms": {
+    "mean": 40.0,
+    "p95": 42.1,
+    "max": 44.1
+  },
+  "distinct_frames_per_s": 19.5
+}
+wrote /work/runs_hd2/neri.mp4

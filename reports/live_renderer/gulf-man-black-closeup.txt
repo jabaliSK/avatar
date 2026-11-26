@@ -1,0 +1,16 @@
+ready: {'type': 'ready', 'avatar': 'gulf-man-black-closeup', 'width': 784, 'height': 1168, 'fps': 25, 'audio_rate': 24000, 'format': 'raw'}
+  [ 12.20s] event {'type': 'speak_started', 'id': None, 'first_audio_to_first_frame_ms': 554, 't': 12.20258288498735}
+  [ 24.08s] event {'type': 'speak_done', 'id': None, 'frames': 298, 'audio_s': 10.84, 'tail_s': 1.08, 'repeated': 65, 'late': 65, 'dropped_by_renderer': 65, 'stale': 0, 'audio_underruns': 0, 'render_ms': 42.9, 'wall_s': 11.88, 't': 24.082085614005337}
+{
+  "frames_received": 399,
+  "speaking_frames": 298,
+  "bytes_per_frame_mean": 2748594,
+  "first_audio_to_first_speaking_frame_ms": 562,
+  "speaking_arrival_ms": {
+    "mean": 40.0,
+    "p95": 42.4,
+    "max": 46.9
+  },
+  "distinct_frames_per_s": 19.5
+}
+wrote /work/runs_hd2/gulf-man-black-closeup.mp4

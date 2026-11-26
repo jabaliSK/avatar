@@ -1,0 +1,28 @@
+{
+  "avatar": "gulf-man-black-closeup",
+  "state": "speaking",
+  "image": "/images/Gemini_Generated_Image_o480yzo480yzo480.png",
+  "frames": 81,
+  "size": [
+    784,
+    1168
+  ],
+  "fps": 25,
+  "seed": 14,
+  "steps": 8,
+  "guidance": 6.0,
+  "audio_guidance": 5.0,
+  "teacache": 0.0,
+  "attention": "cudnn",
+  "sample_area": 960,
+  "end_frame": "free",
+  "prompt": "Body Positions and Posture: A man wearing a maroon and grey checkered shemagh with a black agal, a dark grey thobe and a black bisht talks to the camera in a warm, engaging way, standing upright; the shoulders and torso move naturally with the rhythm of the speech. Hands and Fingers Movements: Both hands rise to chest height and make open, expressive gestures in time with the speech, with open palms and small smooth movements, then relax back down. The fingers move naturally. Face Expressions Change: A friendly, expressive face with the mouth moving as in natural speech and an occasional smile. Eyes Movement: The eyes look at the camera. Head Movements: The head nods gently for emphasis and tilts slightly with the speech. Background: Preserve background integrity matching the reference image's spatial configuration, lighting conditions, and color temperature. Overall Description: The person speaks to the camera with natural, relaxed hand gestures and body movement.",
+  "negative": "",
+  "generate_s": 329.0,
+  "peak_gpu_gb": 26.1,
+  "first_last_mae": 19.431,
+  "first_vs_source_mae": 6.1,
+  "motion_mae_mean": 14.569,
+  "motion_mae_max": 24.13,
+  "step_mae_max": 11.821
+}
