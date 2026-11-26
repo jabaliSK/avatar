@@ -5,6 +5,7 @@ loops
 logs
 reports
 run
+studio
 .cache
 .env
 engines

@@ -348,6 +348,52 @@ def crop_image_by_bbox(
     }
 
 
+def _eye_frame(pts203):
+    """Midpoint, axes (x across the eyes, y down the face) and distance of the four eye corners of 203 landmarks.
+
+    Nothing a face does while it talks moves them: not the jaw, the lips, the brows or the eyelids."""
+    pts = np.asarray(pts203, dtype=np.float64)
+    left = (pts[0] + pts[12]) / 2
+    right = (pts[24] + pts[36]) / 2
+    v = right - left
+    d = max(float(np.linalg.norm(v)), 1e-6)
+    ux = v / d
+    uy = np.array((-ux[1], ux[0]))
+    return (left + right) / 2, ux, uy, d
+
+
+class SteadyCrop:
+    """A crop rectangle that follows a head but not its jaw.
+
+    `parse_rect_from_landmark` sizes and centres the crop on the bounding box of all 203 landmarks, chin included, so every
+    time the mouth opens wide the box grows and slides down: the crop of a talking video pulses by 10-17 % while the head does
+    not change size at all, and a face rendered into that crop is pasted back that much bigger. This rectangle is derived from
+    the eye corners alone. It is calibrated on one frame (the first of a video) so that frame gets exactly the rectangle
+    `parse_rect_from_landmark` would give it; the other frames keep that frame's proportions: size per eye distance, the crop's
+    centre as an offset from the eyes in eye-distance units, and its rotation relative to the eye line."""
+
+    def __init__(self, pts, **rect_kwargs):
+        center, size, angle = parse_rect_from_landmark(pts, **rect_kwargs)
+        mid, ux, uy, d = _eye_frame(pts)
+        delta = center - mid
+        self.size_per_eye = float(size[0]) / d
+        self.offset = (float(delta @ ux) / d, float(delta @ uy) / d)
+        self.angle_offset = self._wrap(angle - np.arctan2(ux[1], ux[0]))
+        self.min_eye = 0.5 * d  # a head turned right away, or a lost track, must not shrink the crop to nothing
+
+    @staticmethod
+    def _wrap(angle):
+        return float((angle + np.pi) % (2 * np.pi) - np.pi)
+
+    def rect(self, pts):
+        """(center, size, angle) like parse_rect_from_landmark."""
+        mid, ux, uy, d = _eye_frame(pts)
+        d = max(d, self.min_eye)
+        center = mid + (self.offset[0] * ux + self.offset[1] * uy) * d
+        size = np.full(2, self.size_per_eye * d)
+        return center, size, self._wrap(np.arctan2(ux[1], ux[0]) + self.angle_offset)
+
+
 def _estimate_similar_transform_from_pts(
     pts, dsize, scale=1.5, vx_ratio=0, vy_ratio=-0.1, flag_do_rot=True, **kwargs
 ):
@@ -357,14 +403,19 @@ def _estimate_similar_transform_from_pts(
     vx_ratio: x shift
     vy_ratio: y shift, the smaller the y shift, the lower the face region
     rot_flag: if it is true, conduct correction
+    steady: a SteadyCrop (203 landmarks): take the rectangle from the eyes instead of the whole landmark box
     """
-    center, size, angle = parse_rect_from_landmark(
-        pts,
-        scale=scale,
-        vx_ratio=vx_ratio,
-        vy_ratio=vy_ratio,
-        use_lip=kwargs.get("use_lip", True),
-    )
+    steady = kwargs.get("steady")
+    if steady is not None:
+        center, size, angle = steady.rect(pts)
+    else:
+        center, size, angle = parse_rect_from_landmark(
+            pts,
+            scale=scale,
+            vx_ratio=vx_ratio,
+            vy_ratio=vy_ratio,
+            use_lip=kwargs.get("use_lip", True),
+        )
 
     s = dsize / size[0]  # scale
     tgt_center = np.array([dsize / 2, dsize / 2], dtype=DTYPE)  # center of dsize
@@ -414,6 +465,7 @@ def crop_image(img, pts: np.ndarray, **kwargs):
         scale=scale,
         vy_ratio=vy_ratio,
         flag_do_rot=kwargs.get("flag_do_rot", True),
+        steady=kwargs.get("steady"),
     )
 
     img_crop = _transform_img(img, M_INV, dsize)  # origin to crop

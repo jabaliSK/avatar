@@ -5,7 +5,7 @@ import os
 import pytest
 
 from app import server
-from app.avatar_store import avatar_stamp
+from app.avatar_store import avatar_stamp, write_settings
 
 
 @pytest.fixture
@@ -36,6 +36,14 @@ def test_loaded_avatar_is_reused_until_meta_changes(runtime):
     assert rt.get_avatar("a") is first and loads == ["a"]
 
     _write_meta(root, "a", mtime=2_000_000_000)  # onboarded again
+    assert rt.get_avatar("a") is not first and loads == ["a", "a"]
+
+
+def test_new_settings_load_the_avatar_again(runtime):
+    rt, root, loads = runtime
+    _write_meta(root, "a", mtime=1_000_000_000)
+    first = rt.get_avatar("a")
+    write_settings(root / "a", {"expression": 0.9})
     assert rt.get_avatar("a") is not first and loads == ["a", "a"]
 
 

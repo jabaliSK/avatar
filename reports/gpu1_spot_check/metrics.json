@@ -1,0 +1,370 @@
+{
+ "video_codec_answer": "H264/90000",
+ "turns": [
+  {
+   "clip": "/opt/kka-tools/samples/q_greenlake.wav",
+   "how": "say",
+   "speech_start": 1795698179.608,
+   "speech_end": 1795698182.197,
+   "asr_text": "Hi there, can you tell me what HPE GreenLake is?",
+   "asr_text_after_speech_end_s": 1.043,
+   "reply_text": "HPE GreenLake is a cloud-based platform that lets you rent computing resources on a pay-as-you-go basis. It offers flexible, scalable, and cost-effective solutions for businesses of all sizes.",
+   "first_reply_text_after_speech_end_s": 1.074,
+   "playback_signals": [
+    [
+     "ChatSignal",
+     "stream_begin",
+     "client_playback",
+     1.943
+    ],
+    [
+     "ChatSignal",
+     "stream_end",
+     "client_playback",
+     15.406
+    ]
+   ],
+   "first_audio_after_speech_end_s": 2.251,
+   "reply": {
+    "onset": 1795698184.448,
+    "end": 1795698197.366,
+    "span_s": 12.94,
+    "sound_s": 10.62,
+    "pauses_ge_200ms": [
+     0.22,
+     0.3,
+     0.24,
+     0.38,
+     0.24
+    ],
+    "video": {
+     "frames": 323,
+     "fps": 25.0,
+     "arrival_interval_ms": {
+      "mean": 40.01,
+      "p50": 39.91,
+      "p95": 44.03,
+      "max": 62.92
+     },
+     "rtp_interval_ms": {
+      "mean": 40.0,
+      "p50": 40.0,
+      "p95": 40.0,
+      "max": 40.0
+     },
+     "frame_diff": {
+      "mean": 1.69,
+      "p50": 1.41,
+      "p95": 3.49,
+      "max": 4.26
+     }
+    }
+   }
+  },
+  {
+   "clip": "/opt/kka-tools/samples/q_servers.wav",
+   "how": "say",
+   "speech_start": 1795698198.748,
+   "speech_end": 1795698202.808,
+   "asr_text": "What is the difference between a ProServer and a Synergy system?",
+   "asr_text_after_speech_end_s": 0.885,
+   "reply_text": "A ProServer is a single server chassis with integrated compute and storage. Synergy is a modular system that combines servers, storage, and networking into a single scalable unit.",
+   "first_reply_text_after_speech_end_s": 0.977,
+   "playback_signals": [
+    [
+     "ChatSignal",
+     "stream_begin",
+     "client_playback",
+     1.899
+    ],
+    [
+     "ChatSignal",
+     "stream_end",
+     "client_playback",
+     14.595
+    ]
+   ],
+   "first_audio_after_speech_end_s": 2.204,
+   "reply": {
+    "onset": 1795698205.012,
+    "end": 1795698216.206,
+    "span_s": 11.22,
+    "sound_s": 9.54,
+    "pauses_ge_200ms": [
+     0.26,
+     0.22
+    ],
+    "video": {
+     "frames": 280,
+     "fps": 25.04,
+     "arrival_interval_ms": {
+      "mean": 39.93,
+      "p50": 39.96,
+      "p95": 43.75,
+      "max": 77.25
+     },
+     "rtp_interval_ms": {
+      "mean": 40.0,
+      "p50": 40.0,
+      "p95": 40.0,
+      "max": 40.0
+     },
+     "frame_diff": {
+      "mean": 1.66,
+      "p50": 1.4,
+      "p95": 3.44,
+      "max": 4.15
+     }
+    }
+   }
+  },
+  {
+   "clip": "/opt/kka-tools/samples/q_short.wav",
+   "how": "say",
+   "speech_start": 1795698217.608,
+   "speech_end": 1795698218.295,
+   "asr_text": "Are you there?",
+   "asr_text_after_speech_end_s": 0.956,
+   "reply_text": "Yes, I'm here! How can I assist you today?",
+   "first_reply_text_after_speech_end_s": 0.989,
+   "playback_signals": [
+    [
+     "ChatSignal",
+     "stream_begin",
+     "client_playback",
+     1.794
+    ],
+    [
+     "ChatSignal",
+     "stream_end",
+     "client_playback",
+     6.587
+    ]
+   ],
+   "first_audio_after_speech_end_s": 2.069,
+   "reply": {
+    "onset": 1795698220.364,
+    "end": 1795698222.726,
+    "span_s": 2.38,
+    "sound_s": 2.04,
+    "pauses_ge_200ms": [
+     0.28
+    ],
+    "video": {
+     "frames": 59,
+     "fps": 24.97,
+     "arrival_interval_ms": {
+      "mean": 40.04,
+      "p50": 39.93,
+      "p95": 43.0,
+      "max": 43.91
+     },
+     "rtp_interval_ms": {
+      "mean": 40.0,
+      "p50": 40.0,
+      "p95": 40.0,
+      "max": 40.0
+     },
+     "frame_diff": {
+      "mean": 1.64,
+      "p50": 1.39,
+      "p95": 3.48,
+      "max": 4.12
+     }
+    }
+   }
+  }
+ ],
+ "replies": [
+  {
+   "onset": 1795698184.448,
+   "end": 1795698197.366,
+   "span_s": 12.94,
+   "sound_s": 10.62,
+   "pauses_ge_200ms": [
+    0.22,
+    0.3,
+    0.24,
+    0.38,
+    0.24
+   ],
+   "video": {
+    "frames": 323,
+    "fps": 25.0,
+    "arrival_interval_ms": {
+     "mean": 40.01,
+     "p50": 39.91,
+     "p95": 44.03,
+     "max": 62.92
+    },
+    "rtp_interval_ms": {
+     "mean": 40.0,
+     "p50": 40.0,
+     "p95": 40.0,
+     "max": 40.0
+    },
+    "frame_diff": {
+     "mean": 1.69,
+     "p50": 1.41,
+     "p95": 3.49,
+     "max": 4.26
+    }
+   }
+  },
+  {
+   "onset": 1795698205.012,
+   "end": 1795698216.206,
+   "span_s": 11.22,
+   "sound_s": 9.54,
+   "pauses_ge_200ms": [
+    0.26,
+    0.22
+   ],
+   "video": {
+    "frames": 280,
+    "fps": 25.04,
+    "arrival_interval_ms": {
+     "mean": 39.93,
+     "p50": 39.96,
+     "p95": 43.75,
+     "max": 77.25
+    },
+    "rtp_interval_ms": {
+     "mean": 40.0,
+     "p50": 40.0,
+     "p95": 40.0,
+     "max": 40.0
+    },
+    "frame_diff": {
+     "mean": 1.66,
+     "p50": 1.4,
+     "p95": 3.44,
+     "max": 4.15
+    }
+   }
+  },
+  {
+   "onset": 1795698220.364,
+   "end": 1795698222.726,
+   "span_s": 2.38,
+   "sound_s": 2.04,
+   "pauses_ge_200ms": [
+    0.28
+   ],
+   "video": {
+    "frames": 59,
+    "fps": 24.97,
+    "arrival_interval_ms": {
+     "mean": 40.04,
+     "p50": 39.93,
+     "p95": 43.0,
+     "max": 43.91
+    },
+    "rtp_interval_ms": {
+     "mean": 40.0,
+     "p50": 40.0,
+     "p95": 40.0,
+     "max": 40.0
+    },
+    "frame_diff": {
+     "mean": 1.64,
+     "p50": 1.39,
+     "p95": 3.48,
+     "max": 4.12
+    }
+   }
+  }
+ ],
+ "script_failures": [],
+ "video_all": {
+  "frames": 1185,
+  "fps": 25.0,
+  "arrival_interval_ms": {
+   "mean": 40.0,
+   "p50": 39.93,
+   "p95": 44.2,
+   "max": 77.25
+  },
+  "rtp_interval_ms": {
+   "mean": 40.0,
+   "p50": 40.0,
+   "p95": 40.0,
+   "max": 40.0
+  },
+  "frame_diff": {
+   "mean": 1.18,
+   "p50": 0.96,
+   "p95": 3.16,
+   "max": 4.26
+  }
+ },
+ "video_kbps": 1771.0,
+ "video_size": [
+  704,
+  1280
+ ],
+ "audio_arrival_interval_ms": {
+  "mean": 20.0,
+  "p50": 20.05,
+  "p95": 26.41,
+  "max": 43.18
+ },
+ "audio_kbps": 50.5,
+ "ice_pair": "local host 192.168.16.7:48795 <-> remote host 192.168.16.6:57001",
+ "webrtc_stats": {
+  "remote-inbound-rtp_139687356824336_717705236": {
+   "type": "remote-inbound-rtp",
+   "id": "remote-inbound-rtp_139687356824336_717705236",
+   "ssrc": 717705236,
+   "kind": "audio",
+   "transportId": "transport_139687356908368",
+   "packetsReceived": 2362,
+   "packetsLost": 0,
+   "jitter": 0.0006041666666666667,
+   "localId": "outbound-rtp_139687356824336_717705236",
+   "roundTripTime": 0.0005815659403770085,
+   "fractionLost": 0.0
+  },
+  "remote-inbound-rtp_139688685599440_2543634323": {
+   "type": "remote-inbound-rtp",
+   "id": "remote-inbound-rtp_139688685599440_2543634323",
+   "ssrc": 2543634323,
+   "kind": "video",
+   "transportId": "transport_139687356908368",
+   "packetsReceived": 241,
+   "packetsLost": 0,
+   "jitter": 0.0002777777777777778,
+   "localId": "outbound-rtp_139688685599440_2543634323",
+   "roundTripTime": 0.0007503419345032496,
+   "fractionLost": 0.0
+  },
+  "inbound-rtp_139687356909648_2279082619": {
+   "type": "inbound-rtp",
+   "id": "inbound-rtp_139687356909648_2279082619",
+   "ssrc": 2279082619,
+   "kind": "audio",
+   "transportId": "transport_139687356908368",
+   "packetsReceived": 2422,
+   "packetsLost": 0,
+   "jitter": 0.0009375,
+   "trackIdentifier": "8143d9b8-aef0-4dee-ad3b-c4b91008c817",
+   "remoteId": "remote-outbound-rtp_139687356909648_2279082619",
+   "bytesReceived": 304914,
+   "nackCount": 0
+  },
+  "inbound-rtp_139687356913936_1864414322": {
+   "type": "inbound-rtp",
+   "id": "inbound-rtp_139687356913936_1864414322",
+   "ssrc": 1864414322,
+   "kind": "video",
+   "transportId": "transport_139687356908368",
+   "packetsReceived": 11536,
+   "packetsLost": 0,
+   "jitter": 0.0012444444444444445,
+   "trackIdentifier": "f3cfbc53-dff1-44fc-87fd-58a14710b8de",
+   "remoteId": "remote-outbound-rtp_139687356913936_1864414322",
+   "bytesReceived": 10709810,
+   "nackCount": 0
+  }
+ }
+}

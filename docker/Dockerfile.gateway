@@ -35,6 +35,7 @@ COPY services/gateway/config /opt/oac/config
 COPY services/gateway/launch.py /opt/kka/launch.py
 COPY services/gateway/rtc_session.py /opt/kka/rtc_session.py
 COPY services/gateway/render_config.py /opt/kka/render_config.py
+COPY services/gateway/studio /opt/kka/studio
 COPY docker/gateway-entrypoint.sh /opt/kka/entrypoint.sh
 RUN chmod +x /opt/kka/entrypoint.sh && mkdir -p /opt/oac/logs /run/kka /opt/numba-cache
 

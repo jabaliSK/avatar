@@ -1,5 +1,6 @@
 """Start OpenAvatarChat (src/demo.py, unmodified) after a few runtime adjustments: the H.264 bitrate limits that its RTC client hard-codes
-are raised, aiortc's built-in public STUN server is switched off, and reconnecting browsers are handled (rtc_session.py).
+are raised, aiortc's built-in public STUN server is switched off, reconnecting browsers are handled (rtc_session.py), and the stock page
+is replaced by the Avatar Studio (studio/).
 
 The stock client pins the video encoder to 0.5-2.5 Mbps, which is low for a 720p+ photoreal face. The values are set inside the
 client module at import time, so the module has to be imported first, under the same name the engine will use for it
@@ -26,10 +27,14 @@ def _bps(name: str, default_kbps: int) -> int:
 
 import client.rtc_client.client_handler_rtc  # noqa: E402,F401  (applies the aiortc H.264 patches)
 import rtc_session  # noqa: E402
+import studio  # noqa: E402
 from aiortc.codecs import h264  # noqa: E402
 from aiortc.rtcicetransport import RTCIceGatherer  # noqa: E402
 from fastrtc.stream import Body, Stream  # noqa: E402
 from fastrtc.webrtc_connection_mixin import WebRTCConnectionMixin  # noqa: E402
+
+# The RTC client registers the page and the WebRTC settings endpoint when the engine sets it up; from here on that registers the Studio.
+studio.attach(client.rtc_client.client_handler_rtc)
 
 # OpenAvatarChat builds the server's peer connection without ICE servers, and aiortc then falls back to Google's public STUN server
 # (stun.l.google.com): a DNS lookup and a UDP request to a third party in every session. An offline deployment must not do that, and

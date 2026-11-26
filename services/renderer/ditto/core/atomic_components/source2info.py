@@ -6,7 +6,7 @@ from ..aux_models.mediapipe_landmark478 import Landmark478
 from ..models.appearance_extractor import AppearanceExtractor
 from ..models.motion_extractor import MotionExtractor
 
-from ..utils.crop import crop_image
+from ..utils.crop import SteadyCrop, crop_image
 from ..utils.eye_info import EyeAttrUtilsByMP
 from ..utils.mp_landmarks import NoFaceDetectedError, detect_lmk68
 
@@ -49,8 +49,10 @@ class Source2Info:
         self.appearance_extractor = AppearanceExtractor(**appearance_extractor_cfg)
         self.motion_extractor = MotionExtractor(**motion_extractor_cfg)
 
-    def _crop(self, img, last_lmk=None, **kwargs):
+    def _crop(self, img, last_lmk=None, steady=None, **kwargs):
         # img_rgb -> MediaPipe 478 (re-indexed to the 68 layout) -> landmark203 -> crop
+        # steady: None for the regular crop; True on the first frame of a video (calibrates a SteadyCrop, whose rectangle for this
+        # frame is the regular one); the SteadyCrop returned for that frame on the following ones (see utils/crop.py).
 
         if last_lmk is None:  # detect on the first frame or image
             lmk_for_track = detect_lmk68(self.landmark478, img)
@@ -69,21 +71,26 @@ class Source2Info:
         )
         lmk203 = self.landmark203(crop_dct["img_crop"], crop_dct["M_c2o"])
 
+        scale = kwargs.get("crop_scale", 2.3)
+        vy_ratio = kwargs.get("crop_vy_ratio", -0.125)
+        if steady is True:
+            steady = SteadyCrop(lmk203, scale=scale, vx_ratio=0, vy_ratio=vy_ratio, use_lip=True)
         ret_dct = crop_image(
             img,
             lmk203,
             dsize=512,
-            scale=kwargs.get("crop_scale", 2.3),
+            scale=scale,
             vx_ratio=kwargs.get("crop_vx_ratio", 0),
-            vy_ratio=kwargs.get("crop_vy_ratio", -0.125),
+            vy_ratio=vy_ratio,
             flag_do_rot=kwargs.get("crop_flag_do_rot", True),
             pt_crop_flag=False,
+            steady=steady,
         )
 
         img_crop = ret_dct["img_crop"]
         M_c2o = ret_dct["M_c2o"]
 
-        return img_crop, M_c2o, lmk203
+        return img_crop, M_c2o, lmk203, steady
     
     @staticmethod
     def _img_crop_to_bchw256(img_crop):
@@ -109,17 +116,19 @@ class Source2Info:
         lr_ball = attr.LR_ball_move().reshape(-1, 6)   # [1, 3, 2] -> [1, 6]
         return [lr_open, lr_ball]
 
-    def __call__(self, img, last_lmk=None, **kwargs):
+    def __call__(self, img, last_lmk=None, steady=None, **kwargs):
         """
         img: rgb, uint8
         last_lmk: last frame lmk203, for video tracking
+        steady: crop that follows the eyes instead of the whole face box (None: regular crop; True: first frame of a video;
+            the SteadyCrop in the returned source_info["steady"] for the following frames)
         kwargs: optional crop cfg
             crop_scale: 2.3
             crop_vx_ratio: 0
             crop_vy_ratio: -0.125
             crop_flag_do_rot: True
         """
-        img_crop, M_c2o, lmk203 = self._crop(img, last_lmk=last_lmk, **kwargs)
+        img_crop, M_c2o, lmk203, steady = self._crop(img, last_lmk=last_lmk, steady=steady, **kwargs)
 
         eye_open, eye_ball = self._get_eye_info(img_crop)
 
@@ -134,5 +143,6 @@ class Source2Info:
             "eye_open": eye_open,   # [1, 2]
             "eye_ball": eye_ball,    # [1, 6]
             "lmk203": lmk203,  # for track
+            "steady": steady,
         }
         return source_info

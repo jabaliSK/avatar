@@ -32,7 +32,8 @@ from fastapi.responses import JSONResponse
 
 from core.atomic_components.avatar_registrar import AvatarRegistrar
 
-from .avatar_store import avatar_stamp, list_avatars, load_avatar
+from .admin import build_router
+from .avatar_store import avatar_stamp, list_avatars, load_avatar, preload_names
 from .engine_cache import ensure_engines
 from .head_engine import HeadEngine
 from .player import AUDIO_RATE, FPS, Output, Player
@@ -69,8 +70,8 @@ class Runtime:
         self.status, self.detail = "loading", "starting"
         self.engine = self.registrar = self.pipe = self.engine_dir = None
         self.loaded = {}
-        self._load_lock = threading.Lock()
-        self.session = threading.Lock()
+        self.load_lock = threading.Lock()  # one thread at a time on the engines: avatar loading, registration, deletion
+        self.session = threading.Lock()  # held by a live conversation and by a registration
 
     def start(self):
         threading.Thread(target=self._boot, name="boot", daemon=True).start()
@@ -85,7 +86,7 @@ class Runtime:
                                      lmdm_precision=Config.lmdm_precision)
             self.registrar = AvatarRegistrar(**self.engine.registrar_cfg)
             self.pipe = SpeechPipeline(self.engine)
-            for name in (list_avatars(Config.avatars) if Config.preload == ["all"] else Config.preload):
+            for name in preload_names(Config.preload, Config.avatars):
                 self.detail = f"loading avatar {name}"
                 self.get_avatar(name)
             self.status, self.detail = "ready", "ok"
@@ -95,7 +96,7 @@ class Runtime:
             self.status, self.detail = "error", repr(e)
 
     def get_avatar(self, name):
-        with self._load_lock:
+        with self.load_lock:
             stamp = avatar_stamp(Config.avatars, name)
             if stamp is None:
                 raise KeyError(f"unknown avatar {name!r}")
@@ -117,6 +118,7 @@ async def lifespan(app):
 
 
 app = FastAPI(title="kka-renderer", lifespan=lifespan)
+app.include_router(build_router(rt, Config.avatars))  # /v1: avatar library and registration, used by the Studio
 
 
 @app.get("/healthz")

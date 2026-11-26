@@ -5,9 +5,11 @@ the mouth stays closed, the speaking state by real speech.
 `seed` is the state's own base seed (the CLI --seed is added to it), so two avatars generated with the same settings differ
 only by their image.
 """
+import re
 
 _BACKGROUND = ("Background: Preserve background integrity matching the reference image's spatial configuration, lighting conditions, "
                "and color temperature.")
+_SEATED = re.compile(r"\b(sit|sits|sitting|seated)\b", re.IGNORECASE)
 
 STATES = {
     "idle": {
@@ -68,4 +70,7 @@ STATES = {
 
 def build_prompt(state, subject=None):
     subject = (subject or "The person").strip()
-    return STATES[state]["template"].format(subject=subject[0].upper() + subject[1:], background=_BACKGROUND)
+    text = STATES[state]["template"].format(subject=subject[0].upper() + subject[1:], background=_BACKGROUND)
+    if _SEATED.search(subject):  # the templates describe a standing person; a seated one would otherwise be asked to stand up
+        text = text.replace("stands relaxed", "sits relaxed").replace("standing upright", "sitting upright")
+    return text

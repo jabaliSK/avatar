@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Refuses to continue unless GPU_ID in .env is the physical GPU named by GPU_PCI_BUS in .env.
-# This host has two GPUs and the second one belongs to other workloads, so a re-ordered device list must never move this stack:
+# This host has two GPUs, so a re-ordered device list must never move this stack to the other one:
 #   scripts/gpu_guard.sh && docker compose up -d
 set -euo pipefail
 cd "$(dirname "$0")/.."

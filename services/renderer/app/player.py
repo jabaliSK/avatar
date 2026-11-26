@@ -3,11 +3,14 @@
 Every 40 ms tick emits exactly one video frame and, while a reply is playing, the 960 PCM samples (24 kHz) that belong to
 it, so audio and video stay locked by construction no matter how the GPU behaves:
 
-* not speaking: frames of the idle / listening / thinking body loop, ping-pong, no GPU work at all;
+* not speaking: frames of the idle / listening / thinking body loop (a full cycle rendered through the live head, played round and
+  round from the rest pose), no GPU work at all;
 * speaking: the newest composited head frame that is due (idx <= tick), or a repeat of the previous one when the renderer
   is late. The renderer is told (gate) to skip motion frames that could no longer make their slot, so a GPU that cannot
   sustain 25 fps degrades to a lower number of distinct frames instead of drifting out of sync or accumulating delay;
-* switches between sources (base state <-> speech) are cross-faded over a few ticks.
+* switches between sources (base state <-> speech) are cross-faded with an eased ramp. A reply ends with the body walking back
+  to its rest pose (HeadEngine.set_tail) and the base loop restarts at its own rest pose, so the two ends of that fade show the
+  same posture and the same face rendering.
 
 Threads: the clock (this class), the SpeechPipeline motion and render threads. Public methods are thread-safe.
 """
@@ -20,7 +23,7 @@ import cv2
 import numpy as np
 from scipy.signal import resample_poly
 
-from core.atomic_components.condition_handler import _mirror_index
+from .avatar_store import drive_kwargs
 
 log = logging.getLogger("kka.player")
 
@@ -68,7 +71,7 @@ class _Reply:
 
 
 class Player:
-    def __init__(self, pipe, avatar, on_output, on_event=None, *, preroll=3, max_lead=10, crossfade=6, audio_timeout=10.0):
+    def __init__(self, pipe, avatar, on_output, on_event=None, *, preroll=3, max_lead=10, crossfade=8, audio_timeout=10.0):
         self.pipe = pipe
         self.avatar = avatar
         self.on_output = on_output
@@ -84,7 +87,8 @@ class Player:
         self._last = None
         self._xf_prev = None
         self._xf_n = 0
-        self._base_arr, self._base_pos = None, 0
+        self._base_loop, self._base_pos = None, 0
+        self._base_restart = False  # the next base frame is the first of its loop (the rest pose)
         self._t0 = 0.0
         pipe.gate = self._gate
 
@@ -108,7 +112,7 @@ class Player:
         """Begin a reply. Blocks for the engine/pipeline set-up (tens of ms)."""
         if self.reply is not None:
             self.interrupt(quiet=True)
-        self.pipe.start(self.avatar.speak_loop)
+        self.pipe.start(self.avatar.speak_loop, **drive_kwargs(self.avatar.settings))
         self.reply = _Reply(rid)
 
     def push_audio(self, pcm24):
@@ -145,6 +149,7 @@ class Player:
             return False
         self.reply = None
         self.state = "listening"
+        self._base_restart = True
         self.pipe.cancel()
         if not quiet:
             self.on_event({"type": "interrupted", "id": r.id, "frames_played": r.played})
@@ -198,12 +203,12 @@ class Player:
         if frame is not None:
             src, state = "speech", "speaking"
         else:
-            arr = self.avatar.base[self.state]
-            if arr is not self._base_arr:
-                self._base_arr, self._base_pos = arr, 0
-            frame = arr[_mirror_index(self._base_pos, len(arr))]
+            loop = self.avatar.base[self.state]
+            if loop is not self._base_loop or self._base_restart:
+                self._base_loop, self._base_pos, self._base_restart = loop, 0, False
+            frame = loop.at(self._base_pos)
             self._base_pos += 1
-            src, state = id(arr), self.state
+            src, state = id(loop), self.state
         if src != self._src:
             if self._last is not None and self.crossfade > 0:
                 self._xf_prev, self._xf_n = self._last, 0
@@ -214,6 +219,7 @@ class Player:
             if alpha >= 1.0:
                 self._xf_prev = None
             else:
+                alpha = alpha * alpha * (3.0 - 2.0 * alpha)  # eased: no visible start or stop of the fade
                 frame = cv2.addWeighted(self._xf_prev, 1.0 - alpha, frame, alpha, 0.0)
         self._last = frame
         self._seq += 1
@@ -280,6 +286,7 @@ class Player:
         now = time.perf_counter()
         self.reply = None
         self.state = "listening"
+        self._base_restart = True
         self.replies += 1
         self.on_event({
             "type": "speak_done", "id": r.id, "frames": r.played,
@@ -294,5 +301,6 @@ class Player:
         r = self.reply
         self.reply = None
         self.state = "listening"
+        self._base_restart = True
         self.pipe.cancel()  # inline: a deferred cancel could hit the next reply's pipeline
         self.on_event({"type": "error", "id": r.id if r else None, "reason": reason, "frames_played": r.played if r else 0})

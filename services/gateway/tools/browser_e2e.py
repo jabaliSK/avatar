@@ -1,21 +1,21 @@
-"""Real-browser check of the avatar page: headless Chromium (Playwright) with fake camera and microphone devices.
+"""Real-browser check of an avatar's stage page: headless Chromium (Playwright) with a fake microphone device.
 
-It behaves like a user: opens the page, allows camera and microphone, starts the conversation, and then records what the browser's own
-WebRTC stack reports while the avatar answers a question that the fake microphone plays. This covers what e2e_client.py (aiortc) cannot:
-the page and its TURN settings as served by the gateway, Chrome's jitter buffer and H.264 decoder, and a camera stream going up.
+It behaves like a user: opens the avatar's page, waits until the avatar is ready, starts the conversation (the fake microphone is
+allowed), and then records what the browser's own WebRTC stack reports while the avatar answers a question that the fake microphone
+plays. This covers what e2e_client.py (aiortc) cannot: the page and its TURN settings as served by the gateway, Chrome's jitter buffer
+and H.264 decoder, a microphone stream going up, and the captions the page shows (a question must appear once, not twice).
 
     pip install playwright && playwright install chromium
-    python browser_e2e.py --url https://10.25.73.101:8282 --mic mic.wav --out run1 [--relay-only]
+    python browser_e2e.py --url https://10.25.73.101:8282/a/<avatar> --mic mic.wav --out run1 [--relay-only]
 
 The fake microphone starts playing the moment the page asks for it, so --mic needs several seconds of silence before the speech
-(the question ends up in the chat history of the page). --relay-only makes the page's RTCPeerConnection use iceTransportPolicy "relay",
+(the question ends up in the captions of the page). --relay-only makes the page's RTCPeerConnection use iceTransportPolicy "relay",
 so the media can only travel through the TURN server, as for a browser on another network. Certificate errors are ignored: the demo
 certificate is self-signed.
 """
 import argparse
 import json
 import pathlib
-import re
 import sys
 
 from playwright.sync_api import TimeoutError as PlaywrightTimeout, sync_playwright
@@ -101,6 +101,7 @@ def main():
     ap.add_argument("--relay-only", action="store_true")
     ap.add_argument("--seconds", type=float, default=60.0, help="give up this long after the conversation starts")
     ap.add_argument("--connect-timeout", type=float, default=25.0, help="give up if the connection is not up this long after clicking start")
+    ap.add_argument("--ready-timeout", type=float, default=90.0, help="give up if the avatar is not ready this long after the page opened (it is loaded on the renderer first)")
     args = ap.parse_args()
     out = pathlib.Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -126,9 +127,10 @@ def main():
                 offers.append({"status": r.status, "body": body[:160].replace("\n", " ")})
 
         page.on("response", on_response)
-        page.goto(args.url, wait_until="networkidle", timeout=60000)
-        page.get_by_text(re.compile("允许访问|allow", re.I)).first.click()
-        start = page.get_by_text(re.compile("开始对话|start", re.I)).first
+        page.goto(args.url, wait_until="domcontentloaded", timeout=60000)
+        # The page first has the renderer load the avatar (14-25 s when it is not warm); the start button arrives with the "ready" overlay.
+        page.wait_for_selector('.frame[data-phase="ready"]', timeout=args.ready_timeout * 1000)
+        start = page.get_by_role("button", name="Start conversation")
         start.wait_for(timeout=15000)
         page.screenshot(path=str(out / "browser_before_start.png"))
         start.click()
@@ -171,8 +173,13 @@ def main():
 
         final = page.evaluate("() => window.__final()")
         videos = page.evaluate("() => [...document.querySelectorAll('video')].map(v => [v.videoWidth, v.videoHeight])")
-        summary = {"url": args.url, "relay_only": args.relay_only, "webrtc": final, "video_elements_wxh": videos,
+        captions = page.evaluate("() => [...document.querySelectorAll('.captions .msg')].map((m) => "
+                                 "[m.classList.contains('human') ? 'human' : 'avatar', m.querySelector('.text').textContent])")
+        summary = {"url": args.url, "relay_only": args.relay_only, "webrtc": final, "video_elements_wxh": videos, "captions": captions,
                    "page_text": page.inner_text("body")[:400], "ice_log": page.evaluate("() => window.__ice")}
+        questions = [text for who, text in captions if who == "human"]
+        if len(questions) != len(set(questions)):
+            summary["error"] = "the page shows the same question more than once"
         if speech and reply:
             speech_end = speech[0][1]
             a, b = sample_at(samples, reply[0][0]), sample_at(samples, reply[0][1])

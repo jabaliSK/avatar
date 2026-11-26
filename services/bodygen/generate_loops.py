@@ -12,9 +12,10 @@ the last one is free, which gives much larger gestures than pinning both ends (t
 it back to the first frame when a reply ends, see renderer/app/head_engine.py). The live head renderer replaces the face region
 at run time, so only the body, hands, shoulders and head pose of the clip are used.
 
-The quiet states (idle, listening, thinking) can be generated too, driven by silent audio (use --end-frame pin so they stay at
-rest), but the renderer does not use them: a quiet clip has no live head (blinks, micro-motion), and a silent EchoMimicV3 clip
-shimmers.
+The quiet states (idle, listening, thinking) are generated the same way, driven by silent audio; they start and end at the photo's
+pose (--end-frame auto pins their last frame) so they loop. The renderer plays the idle clip between replies (the live head is
+rendered on it once, so the eyes blink) and the listening / thinking clips when they exist. Without an idle clip it falls back to
+the still photo plus the live head, which blinks but is a frozen picture: generate the idle clip.
 
 The inference code follows upstream infer_flash.py (third_party/echomimic_v3), without its CLI, moviepy and decord.
 """
@@ -165,11 +166,11 @@ class Generator:
 
     # ------------------------------------------------------------------ generation
     @torch.no_grad()
-    def clip(self, image, prompt, wave, seed, length):
+    def clip(self, image, prompt, wave, seed, length, pin):
         a = self.args
         n = (length - 1) // 4 * 4 + 1  # the VAE compresses time 4x
         h, w = sample_size_for(image, a.sample_area)
-        end = image if a.end_frame == "pin" else None  # pinned: the clip comes back to the portrait (a closed loop, but smaller gestures)
+        end = image if pin else None  # pinned: the clip comes back to the portrait (a closed loop, but smaller gestures)
         video, mask, clip_image = get_image_to_video_latent2(image, end, video_length=n, sample_size=[h, w])
         if self.pipeline.transformer.teacache is not None:
             self.pipeline.transformer.teacache.reset()
@@ -187,6 +188,11 @@ class Generator:
         for i in range(1, len(frames)):  # per-frame colour statistics follow frame 0, as in upstream's save_videos_grid
             frames[i] = color_transfer(frames[i], ref)
         return frames
+
+
+def pins_end_frame(state, mode):
+    """Whether the clip of `state` ends on the portrait as well. auto: the quiet states do (they loop), speaking does not."""
+    return mode == "pin" or (mode == "auto" and state != "speaking")
 
 
 # ---------------------------------------------------------------------- output
@@ -222,7 +228,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--job", action="append", default=[], metavar="NAME=IMAGE", required=True)
     ap.add_argument("--subject", action="append", default=[], metavar="NAME=TEXT", help="who is in the image (clothing, setting) for the prompt")
-    ap.add_argument("--states", default="speaking", help="comma-separated: " + ",".join(sorted(STATES)) + "; the renderer only uses speaking")
+    ap.add_argument("--states", default="speaking", help="comma-separated: " + ",".join(sorted(STATES)) + "; the renderer plays idle between replies and speaking while it talks (listening and thinking are optional)")
     ap.add_argument("--speech", help="speech wav for the speaking state")
     ap.add_argument("--speech-offset", type=float, default=0.0, help="start of the excerpt within --speech, seconds")
     ap.add_argument("--out", default="/out")
@@ -237,9 +243,10 @@ def main():
     ap.add_argument("--sample-area", type=int, default=768, help="the clip has at most sample-area^2 pixels, aspect ratio kept")
     ap.add_argument("--length", type=int, default=81, help="frames per clip (81 = 3.24 s, the model's maximum)")
     ap.add_argument("--attention", default="cudnn", choices=sorted(ATTENTION_BACKENDS), help="SDPA backend (see ATTENTION_BACKENDS)")
-    ap.add_argument("--end-frame", default="free", choices=("pin", "free"),
+    ap.add_argument("--end-frame", default="auto", choices=("auto", "pin", "free"),
                     help="free: only the first frame is the portrait (about 70%% more motion; the renderer walks the body back to the first "
-                         "frame after a reply); pin: the last frame is the portrait too (closed loop, smaller gestures)")
+                         "frame after a reply); pin: the last frame is the portrait too (closed loop, smaller gestures); auto (default): "
+                         "pin for the quiet states, free for speaking")
     ap.add_argument("--teacache", type=float, default=0.0,
                     help="TeaCache threshold; 0 (default) is off. Upstream's pipeline calls the transformer for the audio-conditioned and the "
                          "unconditioned pass without TeaCache's cond_flag, so TeaCache skips the second pass and the audio guidance fades out: "
@@ -282,9 +289,11 @@ def main():
             seed = STATES[state]["seed"] + args.seed
             t0 = time.perf_counter()
             torch.cuda.reset_peak_memory_stats()
-            log.info("%s/%s: generating (%d steps, image %dx%d, seed %d)", name, state, args.steps, *image.size, seed)
+            pin = pins_end_frame(state, args.end_frame)
+            log.info("%s/%s: generating (%d steps, image %dx%d, seed %d, end frame %s)", name, state, args.steps, *image.size, seed,
+                     "pinned" if pin else "free")
             try:
-                frames = gen.clip(image, prompt, gen.wave_for(state, speech, args.length), seed, args.length)
+                frames = gen.clip(image, prompt, gen.wave_for(state, speech, args.length), seed, args.length, pin)
             except torch.cuda.OutOfMemoryError:
                 log.error("%s/%s: out of GPU memory; lower --sample-area", name, state)
                 gc.collect()
@@ -297,7 +306,7 @@ def main():
             report = loop_report(frames, np.asarray(image))
             meta = {"avatar": name, "state": state, "image": path, "frames": len(frames), "size": [frames.shape[2], frames.shape[1]], "fps": FPS,
                     "seed": seed, "steps": args.steps, "guidance": args.guidance, "audio_guidance": args.audio_guidance, "teacache": args.teacache,
-                    "attention": args.attention, "sample_area": args.sample_area, "end_frame": args.end_frame,
+                    "attention": args.attention, "sample_area": args.sample_area, "end_frame": "pin" if pin else "free",
                     "prompt": prompt, "negative": args.negative, "generate_s": round(secs, 1),
                     "peak_gpu_gb": round(torch.cuda.max_memory_allocated() / 2**30, 1), **report}
             with open(base + ".json", "w") as f:

@@ -139,11 +139,11 @@ class Audio2Motion:
         return res_kp_seq
     
     def _update_kp_cond(self, res_kp_seq, idx):
-        if self.fix_kp_cond == 0:  # 不重置
+        if self.fix_kp_cond == 0:  # never reset
             self.kp_cond = res_kp_seq[:, idx-1]
         elif self.fix_kp_cond > 0:
-            if self.clip_idx % self.fix_kp_cond == 0:  # 重置
-                self.kp_cond = self.s_kp_cond.copy()  # 重置所有
+            if self.clip_idx % self.fix_kp_cond == 0:  # reset
+                self.kp_cond = self.s_kp_cond.copy()  # reset every dimension
                 if self.fix_kp_cond_dim is not None:
                     ds, de = self.fix_kp_cond_dim
                     self.kp_cond[:, ds:de] = res_kp_seq[:, idx-1, ds:de]

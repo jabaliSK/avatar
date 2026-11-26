@@ -59,9 +59,12 @@ class AvatarRegistrar:
         source_path,  # image | video
         max_dim=1920,
         n_frames=-1,
+        steady_crop=False,
         **kwargs,
     ):
         """
+        steady_crop: for a video, crop every frame by its eyes instead of by its whole face (see SteadyCrop in utils/crop.py), so the
+            crop does not swell when the mouth opens. A single image is always cropped the regular way. False is upstream's behaviour.
         kwargs:
             crop_scale: 2.3
             crop_vx_ratio: 0
@@ -78,12 +81,14 @@ class AvatarRegistrar:
         }
         keys = ["x_s_info", "f_s", "M_c2o", "eye_open", "eye_ball"]
         last_lmk = None
+        steady = True if steady_crop and len(rgb_list) > 1 else None
         for rgb in rgb_list:
-            info = self.source2info(rgb, last_lmk, **kwargs)
+            info = self.source2info(rgb, last_lmk, steady=steady, **kwargs)
             for k in keys:
                 source_info[f"{k}_lst"].append(info[k])
 
             last_lmk = info["lmk203"]
+            steady = info["steady"]
 
         sc_f0 = source_info['x_s_info_lst'][0]['kp'].flatten()
 

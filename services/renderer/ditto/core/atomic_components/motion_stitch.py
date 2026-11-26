@@ -314,6 +314,8 @@ class MotionStitch:
         d0=None,
         ch_info=None,
         overall_ctrl_info=None,
+        rest_info=None,
+        rest_opts=None,
     ):
         self.is_image_flag = is_image_flag
         if use_d_keys is None:
@@ -389,6 +391,29 @@ class MotionStitch:
 
         self.overall_ctrl_info = overall_ctrl_info
 
+        # Rest face (x_s_info of the template's first frame, a closed mouth). A video template's own face is already talking, and
+        # the audio-driven offset is added on top of it, so the mouth moves twice and keeps moving after the audio stops. With a rest
+        # face the warp always starts from it (the caller renders it from that frame's appearance feature: a talking frame's own
+        # feature carries its open mouth, which the warp cannot close again), and the driving face is built on its canonical
+        # keypoints and expression. Only the head pose (and scale, shift) of the current template frame, its eyes and the audio-driven
+        # lips are applied on top; the eyes keep the template's own (or Ditto's synthetic blinks). None = upstream behaviour.
+        # rest_opts changes what else comes from the template frame (defaults: its estimated scale and shift, only its eyes' expression):
+        # scale "rest" / t "rest" keep the rest face's own, kp "frame" uses the frame's canonical keypoints, exp "nonlip" takes every
+        # expression dimension except the lips' from the frame. HeadEngine.begin() picks the set (REST_ALIGNED / REST_LEGACY).
+        self.rest = None
+        if rest_info is not None:
+            self.rest = rest_info
+            self.rest_opts = {"scale": "frame", "t": "frame", "kp": "rest", "exp": "eyes", **(rest_opts or {})}
+            self.rest_exp = np.asarray(rest_info["exp"], dtype=np.float32).reshape(1, -1)
+            mask = np.ones((21, 3), dtype=bool)
+            if self.rest_opts["exp"] == "eyes":
+                mask[_eye] = False
+            elif self.rest_opts["exp"] == "nonlip":
+                mask[:] = False
+                mask[_lip] = True
+            self.rest_mask = mask.reshape(1, -1)
+            self.rest_x_s = transform_keypoint(rest_info)
+
         self.d0 = d0
         self.idx = 0
 
@@ -423,8 +448,21 @@ class MotionStitch:
         if self.relative_d and self.d0 is None:
             self.d0 = copy.deepcopy(x_d_info)
 
+        x_s_drv = x_s_info  # what the driving face is built on
+        if self.rest is not None:
+            o = self.rest_opts
+            x_s_drv = {
+                **x_s_info,
+                "kp": self.rest["kp"] if o["kp"] == "rest" else x_s_info["kp"],
+                "exp": np.where(self.rest_mask, self.rest_exp, x_s_info["exp"]).astype(x_s_info["exp"].dtype),
+            }
+            if o["scale"] == "rest":
+                x_s_drv["scale"] = self.rest["scale"]
+            if o["t"] == "rest":
+                x_s_drv["t"] = self.rest["t"]
+
         x_d_info = _mix_s_d_info(
-            x_s_info,
+            x_s_drv,
             x_d_info,
             self.use_d_keys,
             self.d0,
@@ -437,7 +475,7 @@ class MotionStitch:
             ][None]
         x_d_info = _fix_exp_for_x_d_info_v2(
             x_d_info,
-            x_s_info,
+            x_s_drv,
             delta_eye,
             self.fix_exp_a1,
             self.fix_exp_a2,
@@ -474,7 +512,9 @@ class MotionStitch:
                 self.pose_s = [yaw_s, pitch_s]
             x_d_info = _fix_gaze(self.pose_s, x_d_info)
 
-        if self.x_s is not None:
+        if self.rest is not None:
+            x_s = self.rest_x_s
+        elif self.x_s is not None:
             x_s = self.x_s
         else:
             x_s = transform_keypoint(x_s_info)
@@ -484,7 +524,10 @@ class MotionStitch:
         x_d = transform_keypoint(x_d_info)
         
         if self.flag_stitching:
-            x_d = self.stitch_net(x_s, x_d)
+            # The stitching net pulls the driving face toward the source's shape, so with a rest face it has to see the current
+            # frame's head pose with that face (what it was trained on: a source and a driving face that differ by the mouth).
+            x_s_net = x_s if self.rest is None else transform_keypoint(x_s_drv)
+            x_d = self.stitch_net(x_s_net, x_d)
 
         self.idx += 1
 

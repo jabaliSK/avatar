@@ -1,4 +1,4 @@
-# Two-stage hybrid avatar stack, pinned to ONE GPU (GPU_ID in .env, default 0).
+# Two-stage hybrid avatar stack, pinned to ONE GPU (GPU_ID in .env, default 1).
 # Start order matters on a shared card: vllm first (it sizes its KV cache from free memory), then the rest.
 name: kkavatar
 
@@ -8,8 +8,14 @@ x-gpu: &gpu
       reservations:
         devices:
           - driver: nvidia
-            device_ids: ["${GPU_ID:-0}"]   # container only ever sees this one device
+            device_ids: ["${GPU_ID:-1}"]   # container only ever sees this one device
             capabilities: [gpu]
+
+# Stage A image, shared by the `bodygen` command line tool and the `worker` service (one image, built once).
+x-bodygen-build: &bodygen-build
+  context: .
+  dockerfile: docker/Dockerfile.bodygen
+  target: app
 
 # The gateway logs what was said and answered. Docker keeps container logs until the container is removed unless they rotate.
 x-logging: &logging
@@ -83,9 +89,14 @@ services:
       KKA_STEPS: ${RENDERER_STEPS:-10}
     volumes:
       - ${MODELS_DIR:-./models}/ditto-talkinghead:/models/ditto-talkinghead:ro
-      - ${AVATARS_DIR:-./avatars}:/avatars:ro
+      # Writable: the Studio registers, changes and deletes avatars through the renderer's /v1 admin API (it also keeps thumbnails here).
+      - ${AVATARS_DIR:-./avatars}:/avatars
       - ./engines:/engines
+      # Where a new avatar's uploaded photo and its Stage A clips are read from during registration (the only paths /v1 accepts).
+      - ${STUDIO_DIR:-./studio}:/studio:ro
+      - ${LOOPS_DIR:-./loops}:/loops:ro
     ports:
+      # The /v1 admin API has no login either; only the gateway (Studio) and the worker reach it, over the compose network.
       - "${BIND_ADDR:-127.0.0.1}:${RENDERER_PORT:-18110}:8290"
 
   # Conversation gateway: OpenAvatarChat (WebRTC + web UI) + Silero VAD + Faster-Whisper + Kokoro + the renderer bridge.
@@ -120,10 +131,12 @@ services:
       KKA_TURN_HOST: ${TURN_HOST:-}                  # set: browsers are given the coturn relay at this address
       KKA_TURN_USER: ${TURN_USER:-kka}
       KKA_TURN_PASSWORD: ${TURN_PASSWORD:-}
+      KKA_STUDIO_KEY: ${STUDIO_KEY:-}                # set: creating, changing and deleting avatars in the Studio asks for this key
     volumes:
       - ${MODELS_DIR:-./models}/faster-whisper-large-v3-turbo:/models/faster-whisper-large-v3-turbo:ro
       - ${MODELS_DIR:-./models}/Kokoro-82M:/models/Kokoro-82M:ro
       - ./run:/run/kka
+      - ${STUDIO_DIR:-./studio}:/studio                # uploaded photos; the Studio hands them to the worker and the renderer
       - numba-cache:/opt/numba-cache  # librosa's JIT-compiled kernels: ~17 s to build, ~1.6 s to load, survives container re-creation
     ports:
       # The only port meant for other machines. The LLM and renderer ports above stay on BIND_ADDR (127.0.0.1): they have no login.
@@ -166,7 +179,9 @@ services:
       - "${GATEWAY_BIND_ADDR:-${BIND_ADDR:-127.0.0.1}}:3478:3478/tcp"
 
   # One-shot avatar onboarding:  docker compose run --rm onboard --image /images/portrait.png --name aisha
-  # With Stage A clips:          docker compose run --rm onboard --image /images/portrait.png --name aisha --loop speaking=/loops/aisha/speaking.mp4
+  # With Stage A clips:          docker compose run --rm onboard --image /images/portrait.png --name aisha \
+  #                                  --loop idle=/loops/aisha/idle.mp4 --loop speaking=/loops/aisha/speaking.mp4
+  # Registering renders every clip frame through the live head to place it on the real face (about a minute for two clips).
   onboard:
     <<: *gpu
     image: kka-renderer:latest
@@ -179,17 +194,14 @@ services:
       - ${IMAGES_DIR:-./images}:/images:ro
       - ${LOOPS_DIR:-./loops}:/loops:ro
 
-  # Stage A, offline, once per avatar: EchoMimicV3-Flash body/gesture loops, after ~2 min of model loading about 5.5 min per 3.2 s clip
-  # at --sample-area 960 (26 GB peak; the host's avatars) or about 2.7 min at the default 768 (22.7 GB), on this GPU.
+  # Stage A, offline, once per avatar: EchoMimicV3-Flash body/gesture clips (idle and speaking), after ~2 min of model loading about
+  # 5.5 min per 3.2 s clip at --sample-area 960 (26 GB peak; the host's avatars) or about 2.7 min at the default 768 (22.7 GB), on this GPU.
   #   docker compose run --rm bodygen --job aisha=/images/portrait.png --subject "aisha=A woman in a blue jacket" \
-  #   --states speaking --speech /speech/sample.wav [--sample-area 960]
+  #   --states idle,speaking --speech /speech/sample_en.wav [--sample-area 960]
   # Stop the live services first when timing matters: two processes on one GPU time-slice each other, which distorts everything.
   bodygen:
     <<: *gpu
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.bodygen
-      target: app
+    build: *bodygen-build
     image: kka-bodygen:latest
     profiles: ["tools"]
     entrypoint: ["python", "/app/generate_loops.py"]
@@ -198,6 +210,33 @@ services:
       - ${IMAGES_DIR:-./images}:/images:ro
       - ./services/bodygen/speech:/speech:ro
       - ${LOOPS_DIR:-./loops}:/out
+
+  # The Studio's job runner: takes an uploaded photo, runs the Stage A generator above as a subprocess (the models are loaded only while
+  # a job runs, so an idle worker holds no GPU memory), then has the renderer register the result. One job at a time; it waits for a
+  # free GPU and for the renderer to be idle. Reached only by the gateway (Studio) over the compose network: no published port, no login.
+  worker:
+    <<: *gpu
+    build: *bodygen-build
+    image: kka-bodygen:latest
+    container_name: kka-worker
+    restart: unless-stopped
+    logging: *logging
+    init: true   # reaps the generator process it starts
+    entrypoint: ["python", "/app/worker.py"]
+    environment:
+      HF_HUB_OFFLINE: "1"
+      KKA_RENDERER_URL: http://kka-renderer:8290
+    volumes:
+      - ${MODELS_DIR:-./models}/echomimic_v3:/models/echomimic_v3:ro
+      - ${STUDIO_DIR:-./studio}:/studio
+      - ./services/bodygen/speech:/speech:ro
+      - ${LOOPS_DIR:-./loops}:/out
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8300/healthz', timeout=4)"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
 volumes:
   numba-cache:

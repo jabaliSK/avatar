@@ -144,6 +144,10 @@ async def run(args):
     for tmp in (args.out + ".video.mp4", args.out + ".wav"):
         os.remove(tmp)
 
+    if args.meta:
+        with open(args.meta, "w") as f:  # one state per recorded video frame, for tools/motion_probe.py
+            json.dump({"fps": 25, "states": [f[2] if not f[3] else "speaking" for f in frames], "events": events}, f)
+
     speak = [f for f in frames if f[3]]
     report = {"frames_received": len(frames), "speaking_frames": len(speak),
               "bytes_per_frame_mean": round(statistics.mean(f[4] for f in frames))}
@@ -170,6 +174,7 @@ def main():
     ap.add_argument("--audio", required=True)
     ap.add_argument("--max-seconds", type=float, default=0.0)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--meta", default="", help="also write the per-frame state sequence and the events here (JSON)")
     ap.add_argument("--format", choices=["raw", "jpeg"], default="raw")
     ap.add_argument("--quality", type=int, default=85)
     ap.add_argument("--tts-speed", type=float, default=3.0)

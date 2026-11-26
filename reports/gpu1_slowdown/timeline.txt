@@ -1,0 +1,45 @@
+turn 1  q_greenlake.wav (say)
+  heard : 'Hi there, can you tell me what HPE GreenLake is?'
+  reply : 'HPE GreenLake is a cloud service that lets you pay for computing resources as you use them. It’s des'
+  after speech end    step    stage
+    +0.000 s      +0.000  you stop speaking
+    +1.279 s      +1.279  ASR text ready  (decode 273 ms, includes the VAD end-of-speech wait)
+    +1.427 s      +0.148  first LLM token reaches TTS
+    +2.340 s      +0.913  first clause synthesised  (TTS 729 ms for the clause)
+    +2.358 s      +0.018  renderer receives the first audio
+    +2.847 s      +0.489  renderer: first frame ready  (463 ms after its first audio)
+    +2.870 s      +0.023  gateway receives the first video frame
+    +3.024 s      +0.154  reply sound reaches the client  (WebRTC transport + jitter buffer)
+  -> first reply sound 3.02 s after speech end; the longest single step is 'ASR text ready' (1.28 s)
+  renderer: 315 frames, 69 repeated (22%), 44.3 ms to render a frame (a 25 fps clock allows 40)
+
+turn 2  q_servers.wav (say)
+  heard : 'What is the difference between a ProServer and a Synergy system?'
+  reply : 'A ProServer is a single server with dedicated resources, while a Synergy system connects multiple se'
+  after speech end    step    stage
+    +0.000 s      +0.000  you stop speaking
+    +1.087 s      +1.087  ASR text ready  (decode 289 ms, includes the VAD end-of-speech wait)
+    +1.156 s      +0.069  first LLM token reaches TTS
+    +2.209 s      +1.053  first clause synthesised  (TTS 840 ms for the clause)
+    +2.222 s      +0.013  renderer receives the first audio
+    +2.757 s      +0.535  renderer: first frame ready  (527 ms after its first audio)
+    +2.787 s      +0.030  gateway receives the first video frame
+    +2.936 s      +0.149  reply sound reaches the client  (WebRTC transport + jitter buffer)
+  -> first reply sound 2.94 s after speech end; the longest single step is 'ASR text ready' (1.09 s)
+  renderer: 407 frames, 88 repeated (22%), 42.8 ms to render a frame (a 25 fps clock allows 40)
+
+turn 3  q_short.wav (say)
+  heard : 'Are you there?'
+  reply : "Yes, I'm here! How can I assist you today?"
+  after speech end    step    stage
+    +0.000 s      +0.000  you stop speaking
+    +1.087 s      +1.087  ASR text ready  (decode 233 ms, includes the VAD end-of-speech wait)
+    +1.171 s      +0.084  first LLM token reaches TTS
+    +2.126 s      +0.955  first clause synthesised  (TTS 649 ms for the clause)
+    +2.154 s      +0.028  renderer receives the first audio
+    +2.628 s      +0.474  renderer: first frame ready  (469 ms after its first audio)
+    +2.645 s      +0.017  gateway receives the first video frame
+    +2.788 s      +0.143  reply sound reaches the client  (WebRTC transport + jitter buffer)
+  -> first reply sound 2.79 s after speech end; the longest single step is 'ASR text ready' (1.09 s)
+  renderer: 118 frames, 22 repeated (19%), 42.9 ms to render a frame (a 25 fps clock allows 40)
+
