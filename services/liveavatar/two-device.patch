@@ -1,0 +1,129 @@
+diff --git a/liveavatar/models/wan/causal_s2v_pipeline.py b/liveavatar/models/wan/causal_s2v_pipeline.py
+index 8253658..7a86a8c 100644
+--- a/liveavatar/models/wan/causal_s2v_pipeline.py
++++ b/liveavatar/models/wan/causal_s2v_pipeline.py
+@@ -72,6 +72,7 @@ class WanS2V:
+         is_training=False,
+         single_gpu=False,
+         offload_kv_cache=False,
++        decoder_device=None,
+     ):
+         r"""
+         Initializes the image-to-video generation model components.
+@@ -127,7 +128,7 @@ class WanS2V:
+ 
+         self.vae = Wan2_1_VAE(
+             vae_pth=os.path.join(checkpoint_dir, config.vae_checkpoint),
+-            device=self.device,dtype=self.param_dtype)
++            device=self.device if decoder_device is None else decoder_device,dtype=self.param_dtype)
+ 
+         if self.is_training:
+             from liveavatar.models.wan.flow_match import FlowMatchScheduler_Omni
+@@ -579,7 +580,7 @@ class WanS2V:
+             cond_lat = torch.stack(
+                 self.vae.encode(
+                     cond.to(dtype=self.param_dtype,
+-                            device=self.device)))[:, :,
++                            device=self.vae.device)))[:, :,
+                                                   1:].cpu()  # for mem save
+             COND.append(cond_lat)
+         return COND
+@@ -690,6 +691,7 @@ class WanS2V:
+         mask=None,
+         input_video_for_sam2=None,
+         enable_online_decode=False,
++        split_decoder=None,
+     ):
+         r"""
+         Generates video frames from input image and text prompt using diffusion process.
+@@ -763,7 +765,7 @@ class WanS2V:
+         self.audio_encoder.model.to(device=self.device, dtype=self.param_dtype)
+         self.audio_encoder.model.requires_grad_(False)
+         self.audio_encoder.model.eval()
+-        self.vae.model.to(self.device)
++        self.vae.model.to(self.vae.device)
+         
+         if '+' in audio_path:
+             audio_paths = audio_path.split('+')
+@@ -896,6 +898,12 @@ class WanS2V:
+         motion_latents = ref_pixel_values.repeat(1, 1, self.motion_frames, 1, 1)
+         videos_last_frames = motion_latents.detach()
+         motion_latents = torch.stack(self.vae.encode(motion_latents))
++        if split_decoder is not None:
++            if enable_online_decode or offload_model or self.init_on_cpu or not self.single_gpu:
++                raise ValueError("split decoding requires the resident, single-process deferred-decoding path")
++            split_decoder.start(self.vae, motion_latents, videos_last_frames, self.motion_frames, infer_frames)
++            ref_latents = ref_latents.to(self.device)
++            motion_latents = motion_latents.to(self.device)
+         
+         if drop_motion_noisy:
+             zero_motion_latents = torch.zeros_like(motion_latents)
+@@ -1103,7 +1111,9 @@ class WanS2V:
+ 
+ 
+                 #----------------------------------------------Step 2.3: clip-level postprocess---------------------------------
+-                if r == 0 and enable_online_decode:
++                if split_decoder is not None:
++                    split_decoder.submit(r, clip_output.detach().cpu())
++                elif r == 0 and enable_online_decode:
+                     if offload_model:
+                         print(f"offloading model to cpu, please wait...")
+                         self.noise_model.cpu()
+@@ -1185,7 +1195,11 @@ class WanS2V:
+                 ).type_as(clip_output)
+                 out.append(image.cpu())
+ 
+-        videos = torch.cat(out, dim=2)
++        if split_decoder is not None:
++            split_decoder.finish()
++            videos = None
++        else:
++            videos = torch.cat(out, dim=2)
+         del clip_noise, clip_latents, clip_output, block_latents
+         self._sampler_timesteps = None
+         self._sampler_sigmas = None
+@@ -1200,7 +1214,7 @@ class WanS2V:
+             torch.cuda.synchronize()
+             torch.cuda.empty_cache()
+ 
+-        return videos[0] if self.rank == 0 else None, dataset_info
++        return videos[0] if self.rank == 0 and videos is not None else None, dataset_info
+ 
+     def tts(self, tts_prompt_audio, tts_prompt_text, tts_text):
+         if not hasattr(self, 'cosyvoice'):
+diff --git a/liveavatar/models/wan/causal_s2v_pipeline_tpp.py b/liveavatar/models/wan/causal_s2v_pipeline_tpp.py
+index 1c2c429..fefe735 100644
+--- a/liveavatar/models/wan/causal_s2v_pipeline_tpp.py
++++ b/liveavatar/models/wan/causal_s2v_pipeline_tpp.py
+@@ -747,6 +747,12 @@ class WanS2V:
+         """
+         # ------------------------------------Step 1: prepare conditional inputs--------------------------------------
+         
++        bench_file = os.getenv("KKA_TPP_METRICS")
++        if bench_file:
++            torch.cuda.synchronize()
++            dist.barrier()  # exclude model construction on every rank
++            bench_start = time.monotonic()
++            bench_rows = []
+         size = self.get_gen_size(
+             size=None,
+             max_area=max_area,
+@@ -1128,12 +1134,18 @@ class WanS2V:
+                             image = image[:, :, 3:]#第一个clip第一个block保留0帧，后面3
+                  
+                         out.append(image.cpu())
++                        if bench_file and image.size(2):
++                            bench_rows.append({"frames": image.size(2), "cpu_rgb_s": time.monotonic() - bench_start})
+ 
+         #-------------------------------------- Step 3: full-video postprocess--------------------------------------
+         if dist.is_initialized():
+                 dist.barrier()
+         if dist.get_rank() == num_gpus_dit-1+int(enable_vae_parallel):
+             videos = torch.cat(out, dim=2)
++            if bench_file:
++                with open(bench_file, "x") as metrics:
++                    json.dump({"layout": "upstream TPP, four DiT ranks plus VAE", "chunks": bench_rows,
++                               "width": videos.size(-1), "height": videos.size(-2)}, metrics, indent=2)
+             del clip_noise, clip_latents, clip_output,block_latents
+             self._sampler_timesteps = None
+             self._sampler_sigmas = None

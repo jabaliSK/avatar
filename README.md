@@ -1,5 +1,8 @@
 # KK Avatar: a real-time talking avatar from one portrait
 
+**Experimental branch:** [LiveAvatar on two H100s and five-GPU comparison](docs/LIVEAVATAR.md).
+The description below is the base application, not the LiveAvatar experiment.
+
 You talk to a video avatar in a browser. It listens, answers in a synthetic voice, lip-syncs, blinks and moves like a person
 standing in front of you: breathing and swaying while it waits, gesturing with its hands while it speaks. One photo, a portrait or
 a full-body shot, is all it needs. The **Avatar Studio** web page (English, HPE theme) lists the avatars, starts conversations and
